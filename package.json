@@ -22,6 +22,7 @@
   "jsnext:main": "build/math-expressions.js",
   "private": false,
   "dependencies": {
+    "amdee": "^0.5.5",
     "babel-cli": "^6.26.0",
     "mathjs": "^4.4.2",
     "number-theory": "*",
