@@ -1,7 +1,10 @@
 {
-  "name": "math-expressions",
+  "name": "@pie-framework/math-expressions",
   "description": "Perform basic equality testing and symbolic computations on mathematical expressions involving transcendental functions",
   "version": "2.0.0-alpha24",
+  "publishConfig": {
+    "access": "public"
+  },
   "author": {
     "name": "Jim Fowler",
     "email": "kisonecat@gmail.com",
