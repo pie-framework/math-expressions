@@ -70558,131 +70558,123 @@
   //   Second element: the token type
   //   Third element (optional): replacement for actual string matched
 
-
   class lexer {
-    constructor(token_rules, whitespace='\\s') {
-
-      this.input = '';
+    constructor(token_rules, whitespace = "\\s") {
+      this.input = "";
       this.location = 0;
-      this.token_rules=[];
+      this.token_rules = [];
 
       // regular expression to identify whitespace at beginning
-      this.initial_whitespace = new RegExp('^(' + whitespace + ')+');
-      
+      this.initial_whitespace = new RegExp("^(" + whitespace + ")+");
+
       // convert first element of each rule to a regular expression that
       // starts at the beginning of the string
-      for(let rule of token_rules) {
-        this.token_rules.push([new RegExp('^'+rule[0])].concat(rule.slice(1)));
+      for (let rule of token_rules) {
+        this.token_rules.push([new RegExp("^" + rule[0])].concat(rule.slice(1)));
       }
     }
-    
+
     set_input(input) {
-      if(typeof input !== "string")
-        throw new Error("Input must be a string");
-      
+      if (typeof input !== "string") throw new Error("Input must be a string");
+
       this.input = input;
       this.location = 0;
     }
 
     return_state() {
-      return({ input: this.input, location: this.location });
+      return { input: this.input, location: this.location };
     }
 
-    set_state({ input=null, location=0 } = {}) {
-
-      if(input !== null) {
+    set_state({ input = null, location = 0 } = {}) {
+      if (input !== null) {
         this.input = input;
         this.location = location;
       }
     }
-    
-    
-    advance({ remove_initial_space=true } = {}) {
+
+    advance({ remove_initial_space = true } = {}) {
       // Find next token at beginning of input and delete from input.
       // Update location to be the position in original input corresponding
       // to end of match.
       // Return token, which is an array of token type and matched string
 
-
       let result = this.initial_whitespace.exec(this.input);
-      if(result) {
+      if (result) {
         //first find any initial whitespace and adjust location
         let n_whitespace = result[0].length;
         this.input = this.input.slice(n_whitespace);
         this.location += n_whitespace;
 
         // don't remove initial space, return it as next token
-        if(!remove_initial_space) {
-  	return { 
-  	  token_type: "SPACE",
-  	  token_text: result[0],
-  	  original_text: result[0],
-  	}
+        if (!remove_initial_space) {
+          return {
+            token_type: "SPACE",
+            token_text: result[0],
+            original_text: result[0]
+          };
         }
 
         // otherwise ignore initial space and continue
       }
-        
+
       // check for EOF
-      if(this.input.length === 0) {
-        return { 
-  	token_type: "EOF",
-  	token_text: "",
-  	original_text: "",
-        }
+      if (this.input.length === 0) {
+        return {
+          token_type: "EOF",
+          token_text: "",
+          original_text: ""
+        };
       }
-      
+
       // search through each token rule in order, finding first match
       result = null;
-      
-      for(var rule of this.token_rules) {
+
+      for (var rule of this.token_rules) {
         result = rule[0].exec(this.input);
-        
-        if(result) {
-  	let n_characters = result[0].length;
-  	this.input = this.input.slice(n_characters);
-  	this.location += n_characters;
-  	break;
+
+        if (result) {
+          let n_characters = result[0].length;
+          this.input = this.input.slice(n_characters);
+          this.location += n_characters;
+          break;
         }
       }
 
       // case that didn't find any matches
-      if(result === null) {
-        return { 
-  	token_type: "INVALID",
-  	token_text: this.input[0],
-  	original_text: this.input[0],
-        }
+      if (result === null) {
+        return {
+          token_type: "INVALID",
+          token_text: this.input[0],
+          original_text: this.input[0]
+        };
       }
 
       // found a match, set token
-      if(rule.length > 2) {
+      if (rule.length > 2) {
         // overwrite text by third element of rule
-        return { token_type: rule[1],
-  	       token_text: rule[2],
-  	       original_text: result[0],
-  	     };
-      }
-      else {
-        return { token_type: rule[1],
-  	       token_text: result[0],
-  	       original_text: result[0],
-  	     };
+        const out = {
+          token_type: rule[1],
+          token_text: rule[2],
+          original_text: result[0]
+        };
+        return out;
+      } else {
+        return {
+          token_type: rule[1],
+          token_text: result[0],
+          original_text: result[0]
+        };
       }
     }
 
-    
     unput(string) {
       // add string to beginning of input and adjust location
-      
-      if(typeof string !== "string")
-        throw new Error("Input must be a string");
+
+      if (typeof string !== "string") throw new Error("Input must be a string");
 
       this.location -= string.length;
       this.input = string + this.input;
-
     }
-    
   }
 
   var is_associative$1 = { '+': true, '*': true, 'and': true, 'or': true, 'union': true, 'intersect': true};
@@ -74545,313 +74537,506 @@
    *
    */
 
-
   const unicode_operators = {
-      "+": function(operands) { return operands.join( ' ' ); },
-      "-": function(operands) { return "- " + operands[0]; },
-      "*": function(operands) { return operands.join( " " ); },
-      "/": function(operands) { return operands[0] + "/" + operands[1]; },
-      "_": function(operands) { return operands[0]  + "_" + operands[1]; },
-      "^": function(operands) { return operands[0]  + "^" + operands[1]; },
-      "prime": function(operands) { return operands[0] + "'"; },
-      "tuple": function(operands) { return '( ' + operands.join( ', ' ) + ' )';},
-      "array": function(operands) { return '[ ' + operands.join( ', ' ) + ' ]';},
-      "list": function(operands) { return operands.join( ', ' );},
-      "set": function(operands) { return '{ ' + operands.join( ', ' ) + ' }';},
-      "vector": function(operands) { return '( ' + operands.join( ', ' ) + ' )';},
-      "interval": function(operands) { return '( ' + operands.join( ', ' ) + ' )';},
-      "matrix": function(operands) { return '( ' + operands.join( ', ' ) + ' )';},
-      "and": function(operands) { return operands.join( ' and ' );},
-      "or": function(operands) { return operands.join( ' or ' );},
-      "not": function(operands) { return 'not ' + operands[0]; },
-      "=": function(operands) { return operands.join( ' = ' );},
-      "<": function(operands) { return operands.join( ' < ' );},
-      ">": function(operands) { return operands.join( ' > ' );},
-      "lts": function(operands) { return operands.join( ' < ' );},
-      "gts": function(operands) { return operands.join( ' > ' );},
+    "%": function(operands) {
+      return operands[0] + "%";
+    },
+    "+": function(operands) {
+      return operands.join(" ");
+    },
+    "-": function(operands) {
+      return "- " + operands[0];
+    },
+    "*": function(operands) {
+      return operands.join(" ");
+    },
+    "/": function(operands) {
+      return operands[0] + "/" + operands[1];
+    },
+    _: function(operands) {
+      return operands[0] + "_" + operands[1];
+    },
+    "^": function(operands) {
+      return operands[0] + "^" + operands[1];
+    },
+    prime: function(operands) {
+      return operands[0] + "'";
+    },
+    tuple: function(operands) {
+      return "( " + operands.join(", ") + " )";
+    },
+    array: function(operands) {
+      return "[ " + operands.join(", ") + " ]";
+    },
+    list: function(operands) {
+      return operands.join(", ");
+    },
+    set: function(operands) {
+      return "{ " + operands.join(", ") + " }";
+    },
+    vector: function(operands) {
+      return "( " + operands.join(", ") + " )";
+    },
+    interval: function(operands) {
+      return "( " + operands.join(", ") + " )";
+    },
+    matrix: function(operands) {
+      return "( " + operands.join(", ") + " )";
+    },
+    and: function(operands) {
+      return operands.join(" and ");
+    },
+    or: function(operands) {
+      return operands.join(" or ");
+    },
+    not: function(operands) {
+      return "not " + operands[0];
+    },
+    "=": function(operands) {
+      return operands.join(" = ");
+    },
+    "<": function(operands) {
+      return operands.join(" < ");
+    },
+    ">": function(operands) {
+      return operands.join(" > ");
+    },
+    lts: function(operands) {
+      return operands.join(" < ");
+    },
+    gts: function(operands) {
+      return operands.join(" > ");
+    },
 
-      "le": function(operands) { return operands.join( ' ≤ ' );},
-      "ge": function(operands) { return operands.join( ' ≥ ' );},
-      "ne": function(operands) { return operands.join( ' ≠ ' );},
-      "in": function(operands) { return operands[0] + " ∈ " + operands[1]; },
-      "notin": function(operands) { return operands[0] + " ∉ " + operands[1]; },
-      "ni": function(operands) { return operands[0] + " ∋ " + operands[1]; },
-      "notni": function(operands) { return operands[0] + " ∌ " + operands[1]; },
-      "subset": function(operands) { return operands[0] + " ⊂ " + operands[1]; },
-      "notsubset": function(operands) { return operands[0] + " ⊄ " + operands[1]; },
-      "superset": function(operands) { return operands[0] + " ⊃ " + operands[1]; },
-      "notsuperset": function(operands) { return operands[0] + " ⊅ " + operands[1]; },
-      "union": function (operands) { return operands.join(' ∪ '); },
-      "intersect": function (operands) { return operands.join(' ∩ '); },
-      "derivative_leibniz": function (operands) { return "d" + operands[0] + "/d" + operands[1]; },
-      "partial_derivative_leibniz": function (operands) { return "∂" + operands[0] + "/∂" + operands[1]; },
-      "|": function (operands) { return operands[0] + " | " + operands[1]; },
-      ":": function (operands) { return operands[0] + " : " + operands[1]; },
-
+    le: function(operands) {
+      return operands.join(" ≤ ");
+    },
+    ge: function(operands) {
+      return operands.join(" ≥ ");
+    },
+    ne: function(operands) {
+      return operands.join(" ≠ ");
+    },
+    in: function(operands) {
+      return operands[0] + " ∈ " + operands[1];
+    },
+    notin: function(operands) {
+      return operands[0] + " ∉ " + operands[1];
+    },
+    ni: function(operands) {
+      return operands[0] + " ∋ " + operands[1];
+    },
+    notni: function(operands) {
+      return operands[0] + " ∌ " + operands[1];
+    },
+    subset: function(operands) {
+      return operands[0] + " ⊂ " + operands[1];
+    },
+    notsubset: function(operands) {
+      return operands[0] + " ⊄ " + operands[1];
+    },
+    superset: function(operands) {
+      return operands[0] + " ⊃ " + operands[1];
+    },
+    notsuperset: function(operands) {
+      return operands[0] + " ⊅ " + operands[1];
+    },
+    union: function(operands) {
+      return operands.join(" ∪ ");
+    },
+    intersect: function(operands) {
+      return operands.join(" ∩ ");
+    },
+    derivative_leibniz: function(operands) {
+      return "d" + operands[0] + "/d" + operands[1];
+    },
+    partial_derivative_leibniz: function(operands) {
+      return "∂" + operands[0] + "/∂" + operands[1];
+    },
+    "|": function(operands) {
+      return operands[0] + " | " + operands[1];
+    },
+    ":": function(operands) {
+      return operands[0] + " : " + operands[1];
+    }
   };
 
   const nonunicode_operators = {
-      "+": function(operands) { return operands.join( ' ' ); },
-      "-": function(operands) { return "- " + operands[0]; },
-      "*": function(operands) { return operands.join( " " ); },
-      "/": function(operands) { return operands[0] + "/" + operands[1]; },
-      "_": function(operands) { return operands[0]  + "_" + operands[1]; },
-      "^": function(operands) { return operands[0]  + "^" + operands[1]; },
-      "prime": function(operands) { return operands[0] + "'"; },
-      "tuple": function(operands) { return '( ' + operands.join( ', ' ) + ' )';},
-      "array": function(operands) { return '[ ' + operands.join( ', ' ) + ' ]';},
-      "list": function(operands) { return operands.join( ', ' );},
-      "set": function(operands) { return '{ ' + operands.join( ', ' ) + ' }';},
-      "vector": function(operands) { return '( ' + operands.join( ', ' ) + ' )';},
-      "interval": function(operands) { return '( ' + operands.join( ', ' ) + ' )';},
-      "matrix": function(operands) { return '( ' + operands.join( ', ' ) + ' )';},
-      "and": function(operands) { return operands.join( ' and ' );},
-      "or": function(operands) { return operands.join( ' or ' );},
-      "not": function(operands) { return 'not ' + operands[0]; },
-      "=": function(operands) { return operands.join( ' = ' );},
-      "<": function(operands) { return operands.join( ' < ' );},
-      ">": function(operands) { return operands.join( ' > ' );},
-      "lts": function(operands) { return operands.join( ' < ' );},
-      "gts": function(operands) { return operands.join( ' > ' );},
+    "+": function(operands) {
+      return operands.join(" ");
+    },
+    "-": function(operands) {
+      return "- " + operands[0];
+    },
+    "*": function(operands) {
+      return operands.join(" ");
+    },
+    "/": function(operands) {
+      return operands[0] + "/" + operands[1];
+    },
+    _: function(operands) {
+      return operands[0] + "_" + operands[1];
+    },
+    "^": function(operands) {
+      return operands[0] + "^" + operands[1];
+    },
+    prime: function(operands) {
+      return operands[0] + "'";
+    },
+    tuple: function(operands) {
+      return "( " + operands.join(", ") + " )";
+    },
+    array: function(operands) {
+      return "[ " + operands.join(", ") + " ]";
+    },
+    list: function(operands) {
+      return operands.join(", ");
+    },
+    set: function(operands) {
+      return "{ " + operands.join(", ") + " }";
+    },
+    vector: function(operands) {
+      return "( " + operands.join(", ") + " )";
+    },
+    interval: function(operands) {
+      return "( " + operands.join(", ") + " )";
+    },
+    matrix: function(operands) {
+      return "( " + operands.join(", ") + " )";
+    },
+    and: function(operands) {
+      return operands.join(" and ");
+    },
+    or: function(operands) {
+      return operands.join(" or ");
+    },
+    not: function(operands) {
+      return "not " + operands[0];
+    },
+    "=": function(operands) {
+      return operands.join(" = ");
+    },
+    "<": function(operands) {
+      return operands.join(" < ");
+    },
+    ">": function(operands) {
+      return operands.join(" > ");
+    },
+    lts: function(operands) {
+      return operands.join(" < ");
+    },
+    gts: function(operands) {
+      return operands.join(" > ");
+    },
 
-      "le": function(operands) { return operands.join( ' <= ' );},
-      "ge": function(operands) { return operands.join( ' >= ' );},
-      "ne": function(operands) { return operands.join( ' ne ' );},
-      "in": function(operands) { return operands[0] + " elementof " + operands[1]; },
-      "notin": function(operands) { return operands[0] + " notelementof " + operands[1]; },
-      "ni": function(operands) { return operands[0] + " containselement " + operands[1]; },
-      "notni": function(operands) { return operands[0] + " notcontainselement " + operands[1]; },
-      "subset": function(operands) { return operands[0] + " subset " + operands[1]; },
-      "notsubset": function(operands) { return operands[0] + " notsubset " + operands[1]; },
-      "superset": function(operands) { return operands[0] + " superset " + operands[1]; },
-      "notsuperset": function(operands) { return operands[0] + " notsuperset " + operands[1]; },
-      "union": function (operands) { return operands.join(' union '); },
-      "intersect": function (operands) { return operands.join(' intersect '); },
-      "derivative_leibniz": function (operands) { return "d" + operands[0] + "/d" + operands[1]; },
-      "partial_derivative_leibniz": function (operands) { return "∂" + operands[0] + "/∂" + operands[1]; },
-      "|": function (operands) { return operands[0] + " | " + operands[1]; },
-      ":": function (operands) { return operands[0] + " : " + operands[1]; },
+    le: function(operands) {
+      return operands.join(" <= ");
+    },
+    ge: function(operands) {
+      return operands.join(" >= ");
+    },
+    ne: function(operands) {
+      return operands.join(" ne ");
+    },
+    in: function(operands) {
+      return operands[0] + " elementof " + operands[1];
+    },
+    notin: function(operands) {
+      return operands[0] + " notelementof " + operands[1];
+    },
+    ni: function(operands) {
+      return operands[0] + " containselement " + operands[1];
+    },
+    notni: function(operands) {
+      return operands[0] + " notcontainselement " + operands[1];
+    },
+    subset: function(operands) {
+      return operands[0] + " subset " + operands[1];
+    },
+    notsubset: function(operands) {
+      return operands[0] + " notsubset " + operands[1];
+    },
+    superset: function(operands) {
+      return operands[0] + " superset " + operands[1];
+    },
+    notsuperset: function(operands) {
+      return operands[0] + " notsuperset " + operands[1];
+    },
+    union: function(operands) {
+      return operands.join(" union ");
+    },
+    intersect: function(operands) {
+      return operands.join(" intersect ");
+    },
+    derivative_leibniz: function(operands) {
+      return "d" + operands[0] + "/d" + operands[1];
+    },
+    partial_derivative_leibniz: function(operands) {
+      return "∂" + operands[0] + "/∂" + operands[1];
+    },
+    "|": function(operands) {
+      return operands[0] + " | " + operands[1];
+    },
+    ":": function(operands) {
+      return operands[0] + " : " + operands[1];
+    }
   };
 
-
-  const output_unicodeDefault = true;
-
-
   class astToText {
-    constructor({
-      output_unicode = output_unicodeDefault
-    } = {}) {
-      this.output_unicode = output_unicode;
-      this.operators = unicode_operators;
-      if(!output_unicode){ this.operators = nonunicode_operators;}
+    constructor(opts = {}) {
+      const uo = Object.assign({}, unicode_operators, opts.unicode_operators);
+      opts = {
+        output_unicode:
+          typeof opts.output_unicode === "boolean" ? opts.output_unicode : true,
+        unicode_operators: uo
+      };
+      this.output_unicode = opts.output_unicode;
+      this.operators = opts.unicode_operators;
+      if (!opts.output_unicode) {
+        this.operators = nonunicode_operators;
+      }
     }
 
     convert(tree) {
-        return this.statement(tree);
+      return this.statement(tree);
     }
 
-   statement(tree) {
-      if ((typeof tree === 'string') || (typeof tree === 'number')) {
-  	return this.single_statement(tree);
+    statement(tree) {
+      if (typeof tree === "string" || typeof tree === "number") {
+        return this.single_statement(tree);
       }
 
       let operator = tree[0];
       let operands = tree.slice(1);
 
-     if(operator === 'ldots')
-       return '...';
+      if (operator === "ldots") return "...";
 
-      if((!(operator in this.operators)) && operator!=="apply")
-  	throw new Error("Badly formed ast: operator " + operator + " not recognized.");
+      if (!(operator in this.operators) && operator !== "apply")
+        throw new Error(
+          "Badly formed ast: operator " + operator + " not recognized."
+        );
 
-      if (operator === 'and' || operator === 'or')  {
-  	return this.operators[operator]( operands.map( function(v,i) {
-  	    let result = this.single_statement(v);
-  	    // for clarity, add parenthesis unless result is
-  	    // single quantity (with no spaces) or already has parens
-  	    if (result.toString().match(/ /)
-  		&& (!(result.toString().match(/^\(.*\)$/))))
-  		return '(' + result  + ')';
-  	    else
-  		return result;
-  	}.bind(this)));
+      if (operator === "and" || operator === "or") {
+        return this.operators[operator](
+          operands.map(
+            function(v, i) {
+              let result = this.single_statement(v);
+              // for clarity, add parenthesis unless result is
+              // single quantity (with no spaces) or already has parens
+              if (
+                result.toString().match(/ /) &&
+                !result.toString().match(/^\(.*\)$/)
+              )
+                return "(" + result + ")";
+              else return result;
+            }.bind(this)
+          )
+        );
       }
       return this.single_statement(tree);
-  }
+    }
 
-   single_statement(tree) {
-      if ((typeof tree === 'string') || (typeof tree === 'number')) {
-  	return this.expression(tree);
+    single_statement(tree) {
+      if (typeof tree === "string" || typeof tree === "number") {
+        return this.expression(tree);
       }
 
       let operator = tree[0];
       let operands = tree.slice(1);
 
-      if (operator === 'not') {
-  	return this.operators[operator]( operands.map( function(v,i) {
-  	    let result = this.single_statement(v);
-  	    // for clarity, add parenthesis unless result is
-  	    // single quantity (with no spaces) or already has parens
-  	    if (result.toString().match(/ /)
-  		&& (!(result.toString().match(/^\(.*\)$/))))
-  		return '(' + result  + ')';
-  	    else
-  		return result;
-  	}.bind(this)));
+      if (operator === "not") {
+        return this.operators[operator](
+          operands.map(
+            function(v, i) {
+              let result = this.single_statement(v);
+              // for clarity, add parenthesis unless result is
+              // single quantity (with no spaces) or already has parens
+              if (
+                result.toString().match(/ /) &&
+                !result.toString().match(/^\(.*\)$/)
+              )
+                return "(" + result + ")";
+              else return result;
+            }.bind(this)
+          )
+        );
       }
 
-      if((operator === '=') || (operator === 'ne')
-         || (operator === '<') || (operator === '>')
-         || (operator === 'le') || (operator === 'ge')
-         || (operator === 'in') || (operator === 'notin')
-         || (operator === 'ni') || (operator === 'notni')
-         || (operator === 'subset') || (operator === 'notsubset')
-         || (operator === 'superset') || (operator === 'notsuperset')) {
-  	return this.operators[operator]( operands.map( function(v,i) {
-  	    return this.expression(v);
-  	}.bind(this)));
+      if (
+        operator === "=" ||
+        operator === "ne" ||
+        operator === "<" ||
+        operator === ">" ||
+        operator === "le" ||
+        operator === "ge" ||
+        operator === "in" ||
+        operator === "notin" ||
+        operator === "ni" ||
+        operator === "notni" ||
+        operator === "subset" ||
+        operator === "notsubset" ||
+        operator === "superset" ||
+        operator === "notsuperset"
+      ) {
+        return this.operators[operator](
+          operands.map(
+            function(v, i) {
+              return this.expression(v);
+            }.bind(this)
+          )
+        );
       }
 
-      if(operator === 'lts' || operator === 'gts') {
-  	let args = operands[0];
-  	let strict = operands[1];
+      if (operator === "lts" || operator === "gts") {
+        let args = operands[0];
+        let strict = operands[1];
 
-  	if(args[0] !== 'tuple' || strict[0] !== 'tuple')
-  	    // something wrong if args or strict are not tuples
-  	    throw new Error("Badly formed ast");
+        if (args[0] !== "tuple" || strict[0] !== "tuple")
+          // something wrong if args or strict are not tuples
+          throw new Error("Badly formed ast");
 
-  	let result = this.expression(args[1]);
-  	for(let i=1; i< args.length-1; i++) {
-  	    if(strict[i]) {
-  		if(operator === 'lts')
-  		    result += " < ";
-  		else
-  		    result += " > ";
-  	    }
-  	    else {
-  		if(operator === 'lts') {
-  		    if(this.output_unicode)
-  			result += " ≤ ";
-  		    else
-  			result += " <= ";
-  		}
-  		else {
-  		    if(this.output_unicode)
-  			result += " ≥ ";
-  		    else
-  			result += " >= ";
-  		}
-  	    }
-  	    result += this.expression(args[i+1]);
-  	}
-  	return result;
+        let result = this.expression(args[1]);
+        for (let i = 1; i < args.length - 1; i++) {
+          if (strict[i]) {
+            if (operator === "lts") result += " < ";
+            else result += " > ";
+          } else {
+            if (operator === "lts") {
+              if (this.output_unicode) result += " ≤ ";
+              else result += " <= ";
+            } else {
+              if (this.output_unicode) result += " ≥ ";
+              else result += " >= ";
+            }
+          }
+          result += this.expression(args[i + 1]);
+        }
+        return result;
       }
 
       return this.expression(tree);
-  }
+    }
 
-   expression(tree) {
-      if ((typeof tree === 'string') || (typeof tree === 'number')) {
-  	return this.term(tree);
+    expression(tree) {
+      if (typeof tree === "string" || typeof tree === "number") {
+        return this.term(tree);
       }
 
       let operator = tree[0];
       let operands = tree.slice(1);
 
-      if (operator === '+') {
-  	return this.operators[operator]( operands.map( function(v,i) {
-  	    if(i>0)
-  		return this.termWithPlusIfNotNegated(v);
-  	    else
-  		return this.term(v);
-  	}.bind(this) ));
+      if (operator === "+") {
+        return this.operators[operator](
+          operands.map(
+            function(v, i) {
+              if (i > 0) return this.termWithPlusIfNotNegated(v);
+              else return this.term(v);
+            }.bind(this)
+          )
+        );
       }
 
-      if ((operator === 'union') || (operator === 'intersect')) {
-  	return this.operators[operator]( operands.map( function(v,i) {
-  	    return this.term(v);
-  	}.bind(this)));
+      if (operator === "union" || operator === "intersect") {
+        return this.operators[operator](
+          operands.map(
+            function(v, i) {
+              return this.term(v);
+            }.bind(this)
+          )
+        );
       }
 
       return this.term(tree);
-  }
+    }
 
-   term(tree) {
-      if ((typeof tree === 'string') || (typeof tree === 'number')) {
-  	return this.factor(tree);
+    term(tree) {
+      if (typeof tree === "string" || typeof tree === "number") {
+        return this.factor(tree);
       }
 
       let operator = tree[0];
       let operands = tree.slice(1);
 
-      if (operator === '-') {
-  	return this.operators[operator]( operands.map( function(v,i) {
-  	    return this.term(v);
-  	}.bind(this)));
+      if (operator === "-") {
+        return this.operators[operator](
+          operands.map(
+            function(v, i) {
+              return this.term(v);
+            }.bind(this)
+          )
+        );
       }
-      if (operator === '*') {
-  	return this.operators[operator]( operands.map( function(v,i) {
-  	    let result;
-  	    if(i > 0) {
-  		result = this.factorWithParenthesesIfNegated(v);
-  		if (result.toString().match( /^[0-9]/ ))
-  		    return '* ' + result;
-  		else
-  		    return result
-  	    }
-  	    else
-  		return this.factor(v);
-  	}.bind(this)));
+      if (operator === "%") {
+        return this.operators["%"](operands);
+      }
+      if (operator === "*") {
+        return this.operators[operator](
+          operands.map(
+            function(v, i) {
+              let result;
+              if (i > 0) {
+                result = this.factorWithParenthesesIfNegated(v);
+                if (result.toString().match(/^[0-9]/)) return "* " + result;
+                else return result;
+              } else return this.factor(v);
+            }.bind(this)
+          )
+        );
       }
 
-      if (operator === '/') {
-  	return this.operators[operator]( operands.map( function(v,i) { return this.factor(v); }.bind(this) ) );
+      if (operator === "/") {
+        return this.operators[operator](
+          operands.map(
+            function(v, i) {
+              return this.factor(v);
+            }.bind(this)
+          )
+        );
       }
 
       return this.factor(tree);
-  }
+    }
 
-   symbolConvert(symbol) {
-      let symbolConversions= {
-  	'alpha': 'α',
-  	'beta': 'β',
-  	'Gamma': 'Γ',
-  	'gamma': 'γ',
-  	'Delta': 'Δ',
-  	'delta': 'δ',
-  	'epsilon': 'ε',
-  	'zeta': 'ζ',
-  	'eta': 'η',
-  	'Theta': 'ϴ',
-  	'theta': 'θ',
-  	'iota': 'ι',
-  	'kappa': 'κ',
-  	'Lambda': 'Λ',
-  	'lambda': 'λ',
-  	'mu': 'μ',
-  	'nu': 'ν',
-  	'Xi': 'Ξ',
-  	'xi': 'ξ',
-  	'Pi': 'Π',
-  	'pi': 'π',
-  	'rho': 'ρ',
-  	'Sigma': 'Σ',
-  	'sigma': 'σ',
-  	'tau': 'τ',
-  	'Upsilon': 'Υ',
-  	'upsilon': 'υ',
-  	'Phi': 'Φ',
-  	'phi': 'ϕ',
-  	'Psi': 'Ψ',
-  	'psi': 'ψ',
-  	'Omega': 'Ω',
-  	'omega': 'ω',
+    symbolConvert(symbol) {
+      let symbolConversions = {
+        alpha: "α",
+        beta: "β",
+        Gamma: "Γ",
+        gamma: "γ",
+        Delta: "Δ",
+        delta: "δ",
+        epsilon: "ε",
+        zeta: "ζ",
+        eta: "η",
+        Theta: "ϴ",
+        theta: "θ",
+        iota: "ι",
+        kappa: "κ",
+        Lambda: "Λ",
+        lambda: "λ",
+        mu: "μ",
+        nu: "ν",
+        Xi: "Ξ",
+        xi: "ξ",
+        Pi: "Π",
+        pi: "π",
+        rho: "ρ",
+        Sigma: "Σ",
+        sigma: "σ",
+        tau: "τ",
+        Upsilon: "Υ",
+        upsilon: "υ",
+        Phi: "Φ",
+        phi: "ϕ",
+        Psi: "Ψ",
+        psi: "ψ",
+        Omega: "Ω",
+        omega: "ω"
       };
-      if (this.output_unicode && (symbol in symbolConversions))
-  	return symbolConversions[symbol];
-      else
-  	return symbol
-  }
+      if (this.output_unicode && symbol in symbolConversions)
+        return symbolConversions[symbol];
+      else return symbol;
+    }
 
     simple_factor_or_function_or_parens(tree) {
       // return true if
@@ -74863,54 +75048,51 @@
 
       let result = this.factor(tree);
 
-      if (result.toString().length === 1
-        || (typeof tree === 'string')
-        || (tree[0] === 'apply')
-        || result.toString().match(/^\(.*\)$/)
+      if (
+        result.toString().length === 1 ||
+        typeof tree === "string" ||
+        tree[0] === "apply" ||
+        result.toString().match(/^\(.*\)$/)
       ) {
         return true;
-      } else if (typeof tree === 'number') {
-        if (tree >= 0 && !tree.toString().includes('e')) {
+      } else if (typeof tree === "number") {
+        if (tree >= 0 && !tree.toString().includes("e")) {
           return true;
         } else {
           return false;
         }
       } else {
-        return false
+        return false;
       }
     }
 
-   factor(tree) {
-      if (typeof tree === 'string') {
-  	return this.symbolConvert(tree);
+    factor(tree) {
+      if (typeof tree === "string") {
+        return this.symbolConvert(tree);
       }
 
-      if (typeof tree === 'number') {
-        if(tree === Infinity) {
-          if(this.output_unicode) {
-            return '∞';
+      if (typeof tree === "number") {
+        if (tree === Infinity) {
+          if (this.output_unicode) {
+            return "∞";
+          } else {
+            return "infinity";
           }
-          else {
-            return 'infinity';
+        } else if (tree === -Infinity) {
+          if (this.output_unicode) {
+            return "-∞";
+          } else {
+            return "-infinity";
           }
-        }
-        else if(tree === -Infinity) {
-          if(this.output_unicode) {
-            return '-∞';
-          }
-          else {
-            return '-infinity';
-          }
-        }
-        else {
+        } else {
           let numberString = tree.toString();
-          let eIndex = numberString.indexOf('e');
-          if(eIndex === -1) {
+          let eIndex = numberString.indexOf("e");
+          if (eIndex === -1) {
             return numberString;
           }
-          let num = numberString.substring(0,eIndex);
-          let exponent = numberString.substring(eIndex+1);
-          if(exponent[0] === "+") {
+          let num = numberString.substring(0, eIndex);
+          let exponent = numberString.substring(eIndex + 1);
+          if (exponent[0] === "+") {
             return num + " * 10^" + exponent.substring(1);
           } else {
             return num + " * 10^(" + exponent + ")";
@@ -74922,215 +75104,204 @@
       let operands = tree.slice(1);
 
       if (operator === "^") {
-  	let operand0 = this.factor(operands[0]);
+        let operand0 = this.factor(operands[0]);
 
-  	// so that f_(st)'^2(x) doesn't get extra parentheses
-  	// (and no longer recognized as function call)
-  	// check for simple factor after removing primes
-  	let remove_primes = operands[0];
-  	while(remove_primes[0] === 'prime') {
-  	    remove_primes=remove_primes[1];
-  	}
+        // so that f_(st)'^2(x) doesn't get extra parentheses
+        // (and no longer recognized as function call)
+        // check for simple factor after removing primes
+        let remove_primes = operands[0];
+        while (remove_primes[0] === "prime") {
+          remove_primes = remove_primes[1];
+        }
 
-  	if(!(this.simple_factor_or_function_or_parens(remove_primes) ||
-  	     (remove_primes[0] === '_' &&  (typeof remove_primes[1] === 'string'))
-  	    ))
-  	    operand0 = '(' + operand0.toString() + ')';
+        if (
+          !(
+            this.simple_factor_or_function_or_parens(remove_primes) ||
+            (remove_primes[0] === "_" && typeof remove_primes[1] === "string")
+          )
+        )
+          operand0 = "(" + operand0.toString() + ")";
 
-  	let operand1 = this.factor(operands[1]);
-  	if(!(this.simple_factor_or_function_or_parens(operands[1])))
-  	    operand1 = '(' + operand1.toString() + ')';
+        let operand1 = this.factor(operands[1]);
+        if (!this.simple_factor_or_function_or_parens(operands[1]))
+          operand1 = "(" + operand1.toString() + ")";
 
-  	return operand0 + '^' + operand1;
-      }
-      else if (operator === "_") {
-  	return this.operators[operator]( operands.map( function(v,i) {
-  	    let result = this.factor(v);
-  	    if(this.simple_factor_or_function_or_parens(v))
-  		return result;
-  	    else
-  		return '(' + result.toString() + ')';
-  	}.bind(this)));
-      }
-      else if(operator === "prime") {
-  	let op = operands[0];
+        return operand0 + "^" + operand1;
+      } else if (operator === "_") {
+        return this.operators[operator](
+          operands.map(
+            function(v, i) {
+              let result = this.factor(v);
+              if (this.simple_factor_or_function_or_parens(v)) return result;
+              else return "(" + result.toString() + ")";
+            }.bind(this)
+          )
+        );
+      } else if (operator === "prime") {
+        let op = operands[0];
 
-  	let n_primes=1;
-  	while(op[0] === "prime") {
-  	    n_primes+=1;
-  	    op=op[1];
-  	}
+        let n_primes = 1;
+        while (op[0] === "prime") {
+          n_primes += 1;
+          op = op[1];
+        }
 
-  	let result = this.factor(op);
+        let result = this.factor(op);
 
-  	if (!(this.simple_factor_or_function_or_parens(op) ||
-  	      (op[0] === '_' &&  (typeof op[1] === 'string'))
-  	     ))
-  	    result = '(' + result.toString() + ')';
-  	for(let i=0; i<n_primes; i++) {
-  	    result += "'";
-  	}
-  	return result;
-      }
-      else if(operator === "-") {
-  	return this.operators[operator]( operands.map( function(v,i) {
-  	    return this.factor(v);
-  	}.bind(this)));
-      }
-      else if(operator === 'tuple' || operator === 'array'
-  	    || operator === 'list'
-  	    || operator === 'set' || operator === 'vector'
-  	    || operator === '|' || operator === ':') {
-  	return this.operators[operator]( operands.map( function(v,i) {
-  	    return this.statement(v);
-  	}.bind(this)));
+        if (
+          !(
+            this.simple_factor_or_function_or_parens(op) ||
+            (op[0] === "_" && typeof op[1] === "string")
+          )
+        )
+          result = "(" + result.toString() + ")";
+        for (let i = 0; i < n_primes; i++) {
+          result += "'";
+        }
+        return result;
+      } else if (operator === "-") {
+        return this.operators[operator](
+          operands.map(
+            function(v, i) {
+              return this.factor(v);
+            }.bind(this)
+          )
+        );
+      } else if (
+        operator === "tuple" ||
+        operator === "array" ||
+        operator === "list" ||
+        operator === "set" ||
+        operator === "vector" ||
+        operator === "|" ||
+        operator === ":"
+      ) {
+        return this.operators[operator](
+          operands.map(
+            function(v, i) {
+              return this.statement(v);
+            }.bind(this)
+          )
+        );
+      } else if (operator === "interval") {
+        let args = operands[0];
+        let closed = operands[1];
+        if (args[0] !== "tuple" || closed[0] !== "tuple")
+          throw new Error("Badly formed ast");
 
-      }
-      else if(operator === 'interval') {
+        let result = this.statement(args[1]) + ", " + this.statement(args[2]);
 
-  	let args = operands[0];
-  	let closed = operands[1];
-  	if(args[0] !== 'tuple' || closed[0] !== 'tuple')
-  	    throw new Error("Badly formed ast");
+        if (closed[1]) result = "[ " + result;
+        else result = "( " + result;
 
-  	let result = this.statement(args[1]) + ", "
-  	    + this.statement(args[2]);
+        if (closed[2]) result = result + " ]";
+        else result = result + " )";
 
-  	if(closed[1])
-  	    result = '[ ' + result;
-  	else
-  	    result = '( ' + result;
-
-  	if(closed[2])
-  	    result = result + ' ]';
-  	else
-  	    result = result + ' )';
-
-  	return result;
-
-      }
-     else if(operator === 'matrix') {
-       let size = operands[0];
+        return result;
+      } else if (operator === "matrix") {
+        let size = operands[0];
         let args = operands[1];
 
-       let result = '[ ';
+        let result = "[ ";
 
-       for(let row = 0; row < size[1]; row += 1) {
-         result = result + '[ ';
-  	for(let col = 0; col < size[2]; col += 1) {
-  	  result = result + this.statement(args[row+1][col+1]);
-  	  if(col < size[2]-1)
-  	    result = result + ',';
-  	  result = result + ' ';
-  	}
-  	result = result + ']';
-         	if(row < size[1]-1)
-  	  result = result + ",";
-         result = result + ' ';
+        for (let row = 0; row < size[1]; row += 1) {
+          result = result + "[ ";
+          for (let col = 0; col < size[2]; col += 1) {
+            result = result + this.statement(args[row + 1][col + 1]);
+            if (col < size[2] - 1) result = result + ",";
+            result = result + " ";
+          }
+          result = result + "]";
+          if (row < size[1] - 1) result = result + ",";
+          result = result + " ";
         }
-       result = result + ']';
+        result = result + "]";
 
-       return result;
+        return result;
+      } else if (
+        operator === "derivative_leibniz" ||
+        operator === "partial_derivative_leibniz"
+      ) {
+        let deriv_symbol = "d";
+        if (operator === "partial_derivative_leibniz") deriv_symbol = "∂";
 
-     }
-     else if(operator === 'derivative_leibniz' || operator === 'partial_derivative_leibniz') {
-       let deriv_symbol = "d";
-       if(operator === 'partial_derivative_leibniz')
-         deriv_symbol = "∂";
+        let num = operands[0];
+        let denom = operands[1];
 
-       let num = operands[0];
-       let denom = operands[1];
+        let n_deriv = 1;
+        let var1 = "";
+        if (Array.isArray(num)) {
+          var1 = num[1];
+          n_deriv = num[2];
+        } else var1 = num;
 
-       let n_deriv = 1;
-       let var1 = "";
-       if(Array.isArray(num)) {
-         var1 = num[1];
-         n_deriv = num[2];
-       }
-       else
-         var1 = num;
+        let result = deriv_symbol;
+        if (n_deriv > 1) result = result + "^" + n_deriv;
+        result = result + this.symbolConvert(var1) + "/";
 
-       let result = deriv_symbol;
-       if(n_deriv > 1)
-         result = result + "^" + n_deriv;
-       result = result + this.symbolConvert(var1) + "/";
+        let n_denom = 1;
+        if (Array.isArray(denom)) {
+          n_denom = denom.length - 1;
+        }
 
-       let n_denom = 1;
-       if(Array.isArray(denom)) {
-         n_denom = denom.length-1;
-       }
+        for (let i = 1; i <= n_denom; i++) {
+          let denom_part = denom[i];
 
-       for(let i=1; i <= n_denom; i++) {
-         let denom_part = denom[i];
+          let exponent = 1;
+          let var2 = "";
+          if (Array.isArray(denom_part)) {
+            var2 = denom_part[1];
+            exponent = denom_part[2];
+          } else var2 = denom_part;
 
-         let exponent = 1;
-         let var2 = "";
-         if(Array.isArray(denom_part)) {
-  	 var2 = denom_part[1];
-  	 exponent = denom_part[2];
-         }
-         else
-  	 var2 = denom_part;
+          result = result + deriv_symbol + this.symbolConvert(var2);
 
-         result = result + deriv_symbol + this.symbolConvert(var2);
+          if (exponent > 1) result = result + "^" + exponent;
+        }
+        return result;
+      } else if (operator === "apply") {
+        if (operands[0] === "abs") {
+          return "|" + this.statement(operands[1]) + "|";
+        }
 
-         if(exponent > 1)
-  	 result = result + "^" + exponent;
+        if (operands[0] === "factorial") {
+          let result = this.factor(operands[1]);
+          if (
+            this.simple_factor_or_function_or_parens(operands[1]) ||
+            (operands[1][0] === "_" && typeof operands[1][1] === "string")
+          )
+            return result + "!";
+          else return "(" + result.toString() + ")!";
+        }
 
-       }
-       return result;
+        let f = this.factor(operands[0]);
+        let f_args = this.statement(operands[1]);
 
-     }
-     else if(operator === 'apply'){
+        if (operands[1][0] !== "tuple") f_args = "(" + f_args + ")";
 
-  	if(operands[0] === 'abs') {
-  	    return '|' + this.statement(operands[1]) + '|';
-  	}
-
-  	if (operands[0] === "factorial") {
-  	    let result = this.factor(operands[1]);
-  	    if(this.simple_factor_or_function_or_parens(operands[1]) ||
-  	       (operands[1][0] === '_' &&  (typeof operands[1][1] === 'string'))
-  	      )
-  		return result + "!";
-  	    else
-  		return '(' + result.toString() + ')!';
-
-  	}
-
-  	let f = this.factor(operands[0]);
-  	let f_args = this.statement(operands[1]);
-
-  	if(operands[1][0] !== 'tuple')
-  	    f_args = "(" + f_args + ")";
-
-  	return f+f_args;
+        return f + f_args;
+      } else {
+        return "(" + this.statement(tree) + ")";
       }
-      else {
-  	return '(' + this.statement(tree) + ')';
-      }
-  }
+    }
 
-   factorWithParenthesesIfNegated(tree){
+    factorWithParenthesesIfNegated(tree) {
       let result = this.factor(tree);
 
-      if (result.toString().match( /^-/ ))
-  	return '(' + result.toString() + ')';
+      if (result.toString().match(/^-/)) return "(" + result.toString() + ")";
 
       // else
       return result;
-  }
+    }
 
-   termWithPlusIfNotNegated(tree){
+    termWithPlusIfNotNegated(tree) {
       let result = this.term(tree);
 
-      if (!result.toString().match( /^-/ ))
-  	return '+ ' + result.toString();
+      if (!result.toString().match(/^-/)) return "+ " + result.toString();
 
       // else
       return result;
-  }
-
+    }
   }
 
   var astToText$1 = new astToText();
@@ -79501,155 +79672,157 @@
 
   */
 
-
   // Some of the latex commands that lead to spacing
-  const whitespace_rule = '\\s|\\\\,|\\\\!|\\\\ |\\\\>|\\\\;|\\\\:|\\\\quad\\b|\\\\qquad\\b';
+  const whitespace_rule =
+    "\\s|\\\\,|\\\\!|\\\\ |\\\\>|\\\\;|\\\\:|\\\\quad\\b|\\\\qquad\\b";
 
   // in order to parse as scientific notation, e.g., 3.2E-12 or .7E+3,
   // it must be at the end or followed a comma, &, |, \|, ), }, \}, ], \\, or \end
-  const sci_notat_exp_regex$1 = '(E[+\\-]?[0-9]+\\s*($|(?=\\,|&|\\||\\\\\\||\\)|\\}|\\\\}|\\]|\\\\\\\\|\\\\end)))?';
+  const sci_notat_exp_regex$1 =
+    "(E[+\\-]?[0-9]+\\s*($|(?=\\,|&|\\||\\\\\\||\\)|\\}|\\\\}|\\]|\\\\\\\\|\\\\end)))?";
 
+  // const latex_rules = [["\\\\neq(?![a-zA-Z])", "NE"]];
   const latex_rules = [
-    ['[0-9]+(\\.[0-9]*)?'+sci_notat_exp_regex$1 , 'NUMBER'],
-    ['\\.[0-9]+'+sci_notat_exp_regex$1, 'NUMBER'],
-    ['\\*', '*'],
-    ['\\/', '/'],
-    ['-', '-'],
-    ['\\+', '+'],
-    ['\\^', '^'],
-    ['\\(', '('],
-    ['\\\\left\\s*\\(', '('],
-    ['\\\\bigl\\s*\\(', '('],
-    ['\\\\Bigl\\s*\\(', '('],
-    ['\\\\biggl\\s*\\(', '('],
-    ['\\\\Biggl\\s*\\(', '('],
-    ['\\)', ')'],
-    ['\\\\right\\s*\\)', ')'],
-    ['\\\\bigr\\s*\\)', ')'],
-    ['\\\\Bigr\\s*\\)', ')'],
-    ['\\\\biggr\\s*\\)', ')'],
-    ['\\\\Biggr\\s*\\)', ')'],
-    ['\\[', '['],
-    ['\\\\left\\s*\\[', '['],
-    ['\\\\bigl\\s*\\[', '['],
-    ['\\\\Bigl\\s*\\[', '['],
-    ['\\\\biggl\\s*\\[', '['],
-    ['\\\\Biggl\\s*\\[', '['],
-    ['\\]', ']'],
-    ['\\\\right\\s*\\]', ']'],
-    ['\\\\bigr\\s*\\]', ']'],
-    ['\\\\Bigr\\s*\\]', ']'],
-    ['\\\\biggr\\s*\\]', ']'],
-    ['\\\\Biggr\\s*\\]', ']'],
-    ['\\|', '|'],
-    ['\\\\left\\s*\\|', '|L'],
-    ['\\\\bigl\\s*\\|', '|L'],
-    ['\\\\Bigl\\s*\\|', '|L'],
-    ['\\\\biggl\\s*\\|', '|L'],
-    ['\\\\Biggl\\s*\\|', '|L'],
-    ['\\\\right\\s*\\|', '|'],
-    ['\\\\bigr\\s*\\|', '|'],
-    ['\\\\Bigr\\s*\\|', '|'],
-    ['\\\\biggr\\s*\\|', '|'],
-    ['\\\\Biggr\\s*\\|', '|'],
-    ['\\\\big\\s*\\|', '|'],
-    ['\\\\Big\\s*\\|', '|'],
-    ['\\\\bigg\\s*\\|', '|'],
-    ['\\\\Bigg\\s*\\|', '|'],
-    ['{', '{'],
-    ['}', '}'],
-    ['\\\\{', 'LBRACE'],
-    ['\\\\left\\s*\\\\{', 'LBRACE'],
-    ['\\\\bigl\\s*\\\\{', 'LBRACE'],
-    ['\\\\Bigl\\s*\\\\{', 'LBRACE'],
-    ['\\\\biggl\\s*\\\\{', 'LBRACE'],
-    ['\\\\Biggl\\s*\\\\{', 'LBRACE'],
-    ['\\\\}', 'RBRACE'],
-    ['\\\\right\\s*\\\\}', 'RBRACE'],
-    ['\\\\bigr\\s*\\\\}', 'RBRACE'],
-    ['\\\\Bigr\\s*\\\\}', 'RBRACE'],
-    ['\\\\biggr\\s*\\\\}', 'RBRACE'],
-    ['\\\\Biggr\\s*\\\\}', 'RBRACE'],
-    ['\\\\cdot(?![a-zA-Z])', '*'],
-    ['\\\\div(?![a-zA-Z])', '/'],
-    ['\\\\times(?![a-zA-Z])', '*'],
-    ['\\\\frac(?![a-zA-Z])', 'FRAC'],
-    [',', ','],
-    [':', ':'],
-    ['\\\\mid', 'MID'],
+    ["[0-9]+(\\.[0-9]*)?" + sci_notat_exp_regex$1, "NUMBER"],
+    ["\\.[0-9]+" + sci_notat_exp_regex$1, "NUMBER"],
+    ["\\*", "*"],
+    ["\\/", "/"],
+    ["%", "PERCENT"],
+    ["-", "-"],
+    ["\\+", "+"],
+    ["\\^", "^"],
+    ["\\(", "("],
+    ["\\\\left\\s*\\(", "("],
+    ["\\\\bigl\\s*\\(", "("],
+    ["\\\\Bigl\\s*\\(", "("],
+    ["\\\\biggl\\s*\\(", "("],
+    ["\\\\Biggl\\s*\\(", "("],
+    ["\\)", ")"],
+    ["\\\\right\\s*\\)", ")"],
+    ["\\\\bigr\\s*\\)", ")"],
+    ["\\\\Bigr\\s*\\)", ")"],
+    ["\\\\biggr\\s*\\)", ")"],
+    ["\\\\Biggr\\s*\\)", ")"],
+    ["\\[", "["],
+    ["\\\\left\\s*\\[", "["],
+    ["\\\\bigl\\s*\\[", "["],
+    ["\\\\Bigl\\s*\\[", "["],
+    ["\\\\biggl\\s*\\[", "["],
+    ["\\\\Biggl\\s*\\[", "["],
+    ["\\]", "]"],
+    ["\\\\right\\s*\\]", "]"],
+    ["\\\\bigr\\s*\\]", "]"],
+    ["\\\\Bigr\\s*\\]", "]"],
+    ["\\\\biggr\\s*\\]", "]"],
+    ["\\\\Biggr\\s*\\]", "]"],
+    ["\\|", "|"],
+    ["\\\\left\\s*\\|", "|L"],
+    ["\\\\bigl\\s*\\|", "|L"],
+    ["\\\\Bigl\\s*\\|", "|L"],
+    ["\\\\biggl\\s*\\|", "|L"],
+    ["\\\\Biggl\\s*\\|", "|L"],
+    ["\\\\right\\s*\\|", "|"],
+    ["\\\\bigr\\s*\\|", "|"],
+    ["\\\\Bigr\\s*\\|", "|"],
+    ["\\\\biggr\\s*\\|", "|"],
+    ["\\\\Biggr\\s*\\|", "|"],
+    ["\\\\big\\s*\\|", "|"],
+    ["\\\\Big\\s*\\|", "|"],
+    ["\\\\bigg\\s*\\|", "|"],
+    ["\\\\Bigg\\s*\\|", "|"],
+    ["{", "{"],
+    ["}", "}"],
+    ["\\\\{", "LBRACE"],
+    ["\\\\left\\s*\\\\{", "LBRACE"],
+    ["\\\\bigl\\s*\\\\{", "LBRACE"],
+    ["\\\\Bigl\\s*\\\\{", "LBRACE"],
+    ["\\\\biggl\\s*\\\\{", "LBRACE"],
+    ["\\\\Biggl\\s*\\\\{", "LBRACE"],
+    ["\\\\}", "RBRACE"],
+    ["\\\\right\\s*\\\\}", "RBRACE"],
+    ["\\\\bigr\\s*\\\\}", "RBRACE"],
+    ["\\\\Bigr\\s*\\\\}", "RBRACE"],
+    ["\\\\biggr\\s*\\\\}", "RBRACE"],
+    ["\\\\Biggr\\s*\\\\}", "RBRACE"],
+    ["\\\\cdot(?![a-zA-Z])", "*"],
+    ["\\\\div(?![a-zA-Z])", "/"],
+    ["\\\\times(?![a-zA-Z])", "*"],
+    ["\\\\frac(?![a-zA-Z])", "FRAC"],
+    [",", ","],
+    [":", ":"],
+    ["\\\\mid", "MID"],
 
-    ['\\\\vartheta(?![a-zA-Z])', 'LATEXCOMMAND', '\\theta'],
-    ['\\\\varepsilon(?![a-zA-Z])', 'LATEXCOMMAND', '\\epsilon'],
-    ['\\\\varrho(?![a-zA-Z])', 'LATEXCOMMAND', '\\rho'],
-    ['\\\\varphi(?![a-zA-Z])', 'LATEXCOMMAND', '\\phi'],
+    ["\\\\vartheta(?![a-zA-Z])", "LATEXCOMMAND", "\\theta"],
+    ["\\\\varepsilon(?![a-zA-Z])", "LATEXCOMMAND", "\\epsilon"],
+    ["\\\\varrho(?![a-zA-Z])", "LATEXCOMMAND", "\\rho"],
+    ["\\\\varphi(?![a-zA-Z])", "LATEXCOMMAND", "\\phi"],
 
-    ['\\\\infty(?![a-zA-Z])', 'INFINITY'],
+    ["\\\\infty(?![a-zA-Z])", "INFINITY"],
 
-    ['\\\\asin(?![a-zA-Z])', 'LATEXCOMMAND', '\\arcsin'],
-    ['\\\\acos(?![a-zA-Z])', 'LATEXCOMMAND', '\\arccos'],
-    ['\\\\atan(?![a-zA-Z])', 'LATEXCOMMAND', '\\arctan'],
-    ['\\\\sqrt(?![a-zA-Z])', 'SQRT'],
+    ["\\\\asin(?![a-zA-Z])", "LATEXCOMMAND", "\\arcsin"],
+    ["\\\\acos(?![a-zA-Z])", "LATEXCOMMAND", "\\arccos"],
+    ["\\\\atan(?![a-zA-Z])", "LATEXCOMMAND", "\\arctan"],
+    ["\\\\sqrt(?![a-zA-Z])", "SQRT"],
 
-    ['\\\\land(?![a-zA-Z])', 'AND'],
-    ['\\\\wedge(?![a-zA-Z])', 'AND'],
+    ["\\\\land(?![a-zA-Z])", "AND"],
+    ["\\\\wedge(?![a-zA-Z])", "AND"],
 
-    ['\\\\lor(?![a-zA-Z])', 'OR'],
-    ['\\\\vee(?![a-zA-Z])', 'OR'],
+    ["\\\\lor(?![a-zA-Z])", "OR"],
+    ["\\\\vee(?![a-zA-Z])", "OR"],
 
-    ['\\\\lnot(?![a-zA-Z])', 'NOT'],
+    ["\\\\lnot(?![a-zA-Z])", "NOT"],
 
-    ['=', '='],
-    ['\\\\neq(?![a-zA-Z])', 'NE'],
-    ['\\\\ne(?![a-zA-Z])', 'NE'],
-    ['\\\\not\\s*=', 'NE'],
-    ['\\\\leq(?![a-zA-Z])', 'LE'],
-    ['\\\\le(?![a-zA-Z])', 'LE'],
-    ['\\\\geq(?![a-zA-Z])', 'GE'],
-    ['\\\\ge(?![a-zA-Z])', 'GE'],
-    ['<', '<'],
-    ['\\\\lt(?![a-zA-Z])', '<'],
-    ['>', '>'],
-    ['\\\\gt(?![a-zA-Z])', '>'],
+    ["=", "="],
+    ["\\\\neq(?![a-zA-Z])", "NE"],
+    ["\\\\ne(?![a-zA-Z])", "NE"],
+    ["\\\\not\\s*=", "NE"],
+    ["\\\\leq(?![a-zA-Z])", "LE"],
+    ["\\\\le(?![a-zA-Z])", "LE"],
+    ["\\\\geq(?![a-zA-Z])", "GE"],
+    ["\\\\ge(?![a-zA-Z])", "GE"],
+    ["<", "<"],
+    ["\\\\lt(?![a-zA-Z])", "<"],
+    [">", ">"],
+    ["\\\\gt(?![a-zA-Z])", ">"],
 
-    ['\\\\in(?![a-zA-Z])', 'IN'],
+    ["\\\\in(?![a-zA-Z])", "IN"],
 
-    ['\\\\notin(?![a-zA-Z])', 'NOTIN'],
-    ['\\\\not\\s*\\\\in(?![a-zA-Z])', 'NOTIN'],
+    ["\\\\notin(?![a-zA-Z])", "NOTIN"],
+    ["\\\\not\\s*\\\\in(?![a-zA-Z])", "NOTIN"],
 
-    ['\\\\ni(?![a-zA-Z])', 'NI'],
+    ["\\\\ni(?![a-zA-Z])", "NI"],
 
-    ['\\\\not\\s*\\\\ni(?![a-zA-Z])', 'NOTNI'],
+    ["\\\\not\\s*\\\\ni(?![a-zA-Z])", "NOTNI"],
 
-    ['\\\\subset(?![a-zA-Z])', 'SUBSET'],
+    ["\\\\subset(?![a-zA-Z])", "SUBSET"],
 
-    ['\\\\not\\s*\\\\subset(?![a-zA-Z])', 'NOTSUBSET'],
+    ["\\\\not\\s*\\\\subset(?![a-zA-Z])", "NOTSUBSET"],
 
-    ['\\\\supset(?![a-zA-Z])', 'SUPERSET'],
+    ["\\\\supset(?![a-zA-Z])", "SUPERSET"],
 
-    ['\\\\not\\s*\\\\supset(?![a-zA-Z])', 'NOTSUPERSET'],
+    ["\\\\not\\s*\\\\supset(?![a-zA-Z])", "NOTSUPERSET"],
 
-    ['\\\\cup(?![a-zA-Z])', 'UNION'],
+    ["\\\\cup(?![a-zA-Z])", "UNION"],
 
-    ['\\\\cap(?![a-zA-Z])', 'INTERSECT'],
+    ["\\\\cap(?![a-zA-Z])", "INTERSECT"],
 
-    ['!', '!'],
-    ['\'', '\''],
-    ['_', '_'],
-    ['&', '&'],
-    ['\\\\ldots', 'LDOTS'],
+    ["!", "!"],
+    ["'", "'"],
+    ["_", "_"],
+    ["&", "&"],
+    ["\\\\ldots", "LDOTS"],
 
-    ['\\\\\\\\', 'LINEBREAK'],
+    ["\\\\\\\\", "LINEBREAK"],
 
-    ['\\\\begin\\s*{\\s*[a-zA-Z0-9]+\\s*}', 'BEGINENVIRONMENT'],
+    ["\\\\begin\\s*{\\s*[a-zA-Z0-9]+\\s*}", "BEGINENVIRONMENT"],
 
-    ['\\\\end\\s*{\\s*[a-zA-Z0-9]+\\s*}', 'ENDENVIRONMENT'],
+    ["\\\\end\\s*{\\s*[a-zA-Z0-9]+\\s*}", "ENDENVIRONMENT"],
 
-    ['\\\\var\\s*{\\s*[a-zA-Z0-9]+\\s*}', 'VARMULTICHAR'],
+    ["\\\\var\\s*{\\s*[a-zA-Z0-9]+\\s*}", "VARMULTICHAR"],
 
-    ['\\\\[a-zA-Z]+(?![a-zA-Z])', 'LATEXCOMMAND'],
-    ['[a-zA-Z]', 'VAR']
+    ["\\\\[a-zA-Z]+(?![a-zA-Z])", "LATEXCOMMAND"],
+    ["[a-zA-Z]", "VAR"]
   ];
-
 
   // defaults for parsers if not overridden by context
 
@@ -79657,55 +79830,152 @@
   // if false, omitting parentheses will lead to a Parse Error
   const allowSimplifiedFunctionApplicationDefault$1 = true;
 
-
   // allowed multicharacter latex symbols
   // in addition to the below applied function symbols
-  const allowedLatexSymbolsDefault$1 = ['alpha', 'beta', 'gamma', 'Gamma', 'delta', 'Delta', 'epsilon', 'zeta', 'eta', 'theta', 'Theta', 'iota', 'kappa', 'lambda', 'Lambda', 'mu', 'nu', 'xi', 'Xi', 'pi', 'Pi', 'rho', 'sigma', 'Sigma', 'tau', 'Tau', 'upsilon', 'Upsilon', 'phi', 'Phi', 'chi', 'psi', 'Psi', 'omega', 'Omega', 'partial'];
+  const allowedLatexSymbolsDefault$1 = [
+    "alpha",
+    "beta",
+    "gamma",
+    "Gamma",
+    "delta",
+    "Delta",
+    "epsilon",
+    "zeta",
+    "eta",
+    "theta",
+    "Theta",
+    "iota",
+    "kappa",
+    "lambda",
+    "Lambda",
+    "mu",
+    "nu",
+    "xi",
+    "Xi",
+    "pi",
+    "Pi",
+    "rho",
+    "sigma",
+    "Sigma",
+    "tau",
+    "Tau",
+    "upsilon",
+    "Upsilon",
+    "phi",
+    "Phi",
+    "chi",
+    "psi",
+    "Psi",
+    "omega",
+    "Omega",
+    "partial"
+  ];
 
   // Applied functions must be given an argument so that
   // they are applied to the argument
-  const appliedFunctionSymbolsDefault$1 = ["abs", "exp", "log", "ln", "log10", "sign", "sqrt", "erf", "acos", "acosh", "acot", "acoth", "acsc", "acsch", "asec", "asech", "asin", "asinh", "atan", "atanh", "cos", "cosh", "cot", "coth", "csc", "csch", "sec", "sech", "sin", "sinh", "tan", "tanh", 'arcsin', 'arccos', 'arctan', 'arccsc', 'arcsec', 'arccot', 'cosec', 'arg'];
+  const appliedFunctionSymbolsDefault$1 = [
+    "abs",
+    "exp",
+    "log",
+    "ln",
+    "log10",
+    "sign",
+    "sqrt",
+    "erf",
+    "acos",
+    "acosh",
+    "acot",
+    "acoth",
+    "acsc",
+    "acsch",
+    "asec",
+    "asech",
+    "asin",
+    "asinh",
+    "atan",
+    "atanh",
+    "cos",
+    "cosh",
+    "cot",
+    "coth",
+    "csc",
+    "csch",
+    "sec",
+    "sech",
+    "sin",
+    "sinh",
+    "tan",
+    "tanh",
+    "arcsin",
+    "arccos",
+    "arctan",
+    "arccsc",
+    "arcsec",
+    "arccot",
+    "cosec",
+    "arg"
+  ];
 
   // Functions could have an argument, in which case they are applied
   // or, if they don't have an argument in parentheses, then they are treated
   // like a variable, except that trailing ^ and ' have higher precedence
-  const functionSymbolsDefault$1 = ['f', 'g'];
+  const functionSymbolsDefault$1 = ["f", "g"];
 
   // Parse Leibniz notation
   const parseLeibnizNotationDefault$1 = true;
 
+  const missingFactorDefaultBehavior = function(token, e) {
+    throw e;
+  };
+
+  const defaultOpts = {
+    allowSimplifiedFunctionApplication: allowSimplifiedFunctionApplicationDefault$1,
+    allowedLatexSymbols: allowedLatexSymbolsDefault$1,
+    appliedFunctionSymbols: appliedFunctionSymbolsDefault$1,
+    functionSymbols: functionSymbolsDefault$1,
+    parseLeibnizNotation: parseLeibnizNotationDefault$1,
+    missingFactor: missingFactorDefaultBehavior,
+    unknownCommandBehavior: "error"
+  };
 
   class latexToAst {
-    constructor({
-      allowSimplifiedFunctionApplication = allowSimplifiedFunctionApplicationDefault$1,
-      allowedLatexSymbols = allowedLatexSymbolsDefault$1,
-      appliedFunctionSymbols = appliedFunctionSymbolsDefault$1,
-      functionSymbols = functionSymbolsDefault$1,
-      parseLeibnizNotation = parseLeibnizNotationDefault$1,
-    } = {}) {
-      this.allowSimplifiedFunctionApplication = allowSimplifiedFunctionApplication;
-      this.allowedLatexSymbols = allowedLatexSymbols;
-      this.appliedFunctionSymbols = appliedFunctionSymbols;
-      this.functionSymbols = functionSymbols;
-      this.parseLeibnizNotation = parseLeibnizNotation;
+    constructor(opts) {
+      opts = Object.assign({}, defaultOpts, opts);
+      this.allowSimplifiedFunctionApplication =
+        opts.allowSimplifiedFunctionApplication;
+      this.allowedLatexSymbols = opts.allowedLatexSymbols;
+      this.appliedFunctionSymbols = opts.appliedFunctionSymbols;
+      this.functionSymbols = opts.functionSymbols;
+      this.parseLeibnizNotation = opts.parseLeibnizNotation;
+      this.missingFactor = opts.missingFactor;
+      this.unknownCommandBehavior = opts.unknownCommandBehavior;
 
+      if (
+        this.unknownCommandBehavior !== "error" &&
+        this.unknownCommandBehavior !== "passthrough"
+      ) {
+        throw new Error(
+          "Unknown behavior for unknown command: " + this.unknownCommandBehavior
+        );
+      }
       this.lexer = new lexer(latex_rules, whitespace_rule);
-
     }
 
     advance(params) {
       this.token = this.lexer.advance(params);
-      if (this.token.token_type === 'INVALID') {
-        throw new ParseError("Invalid symbol '" + this.token.original_text + "'",
-          this.lexer.location);
+      if (this.token.token_type === "INVALID") {
+        throw new ParseError(
+          "Invalid symbol '" + this.token.original_text + "'",
+          this.lexer.location
+        );
       }
     }
 
     return_state() {
-      return ({
+      return {
         lexer_state: this.lexer.return_state(),
         token: Object.assign({}, this.token)
-      });
+      };
     }
 
     set_state(state) {
@@ -79713,71 +79983,67 @@
       this.token = Object.assign({}, state.token);
     }
 
-
-    convert(input) {
-
+    convert(input, pars) {
       this.lexer.set_input(input);
       this.advance();
 
-      var result = this.statement_list();
-
-      if (this.token.token_type !== 'EOF') {
-        throw new ParseError("Invalid location of '" + this.token.original_text + "'",
-          this.lexer.location);
+      var result = this.statement_list(pars);
+      // console.log("this.token.token_type:", this.token);
+      if (this.token.token_type !== "EOF") {
+        throw new ParseError(
+          "Invalid location of '" + this.token.original_text + "'",
+          this.lexer.location
+        );
       }
 
       return flatten$18(result);
-
     }
 
-    statement_list() {
-
-      var list = [this.statement()];
+    statement_list(pars) {
+      var list = [this.statement(pars)];
 
       while (this.token.token_type === ",") {
         this.advance();
-        list.push(this.statement());
+        list.push(this.statement(pars));
       }
 
-      if (list.length > 1)
-        list = ['list'].concat(list);
-      else
-        list = list[0];
+      if (list.length > 1) list = ["list"].concat(list);
+      else list = list[0];
 
       return list;
     }
 
-    statement({ inside_absolute_value = 0 } = {}) {
-
+    statement({ inside_absolute_value = 0, unknownCommands = "error" } = {}) {
       // \ldots can be a statement by itself
-      if (this.token.token_type === 'LDOTS') {
+      if (this.token.token_type === "LDOTS") {
         this.advance();
-        return ['ldots'];
+        return ["ldots"];
       }
 
       var original_state;
 
       try {
-
         original_state = this.return_state();
 
-        let lhs = this.statement_a({ inside_absolute_value: inside_absolute_value });
+        let lhs = this.statement_a({
+          inside_absolute_value: inside_absolute_value,
+          unknownCommands: unknownCommands
+        });
 
-        if (this.token.token_type !== ':' && this.token.token_type !== 'MID')
+        //console.log("lhs:", lhs);
+
+        if (this.token.token_type !== ":" && this.token.token_type !== "MID")
           return lhs;
 
-        let operator = this.token.token_type === ':' ? ':' : '|';
+        let operator = this.token.token_type === ":" ? ":" : "|";
 
         this.advance();
 
-        let rhs = this.statement_a();
+        let rhs = this.statement_a({ unknownCommands: unknownCommands });
 
         return [operator, lhs, rhs];
-
-      }
-      catch (e) {
+      } catch (e) {
         try {
-
           // if ran into problem parsing statement
           // then try again with ignoring absolute value
           // and then interpreting bar as a binary operator
@@ -79787,39 +80053,42 @@
 
           let lhs = this.statement_a({ parse_absolute_value: false });
 
-          if (this.token.token_type[0] !== '|') {
-            throw (e);
+          //console.log("lhs:", lhs);
+          if (this.token.token_type[0] !== "|") {
+            throw e;
           }
 
           this.advance();
 
           let rhs = this.statement_a({ parse_absolute_value: false });
 
-          return ['|', lhs, rhs];
-
-        }
-        catch (e2) {
-          throw (e);  // throw original error
+          return ["|", lhs, rhs];
+        } catch (e2) {
+          throw e; // throw original error
         }
       }
     }
 
-    statement_a({ inside_absolute_value = 0, parse_absolute_value = true } = {}) {
-
+    statement_a({
+      inside_absolute_value = 0,
+      parse_absolute_value = true,
+      unknownCommands
+    } = {}) {
       var lhs = this.statement_b({
         inside_absolute_value: inside_absolute_value,
-        parse_absolute_value: parse_absolute_value
+        parse_absolute_value: parse_absolute_value,
+        unknownCommands: unknownCommands
       });
 
-      while (this.token.token_type === 'OR') {
-
+      while (this.token.token_type === "OR") {
         let operation = this.token.token_type.toLowerCase();
 
         this.advance();
 
         let rhs = this.statement_b({
           inside_absolute_value: inside_absolute_value,
-          parse_absolute_value: parse_absolute_value
+          parse_absolute_value: parse_absolute_value,
+          unknownCommands: unknownCommands
         });
 
         lhs = [operation, lhs, rhs];
@@ -79828,14 +80097,12 @@
       return lhs;
     }
 
-
     statement_b(params) {
       // split AND into second statement to give higher precedence than OR
 
       var lhs = this.relation(params);
 
-      while (this.token.token_type === 'AND') {
-
+      while (this.token.token_type === "AND") {
         let operation = this.token.token_type.toLowerCase();
 
         this.advance();
@@ -79848,32 +80115,40 @@
       return lhs;
     }
 
-
     relation(params) {
-
-      if (this.token.token_type === 'NOT' || this.token.token_type === '!') {
+      if (this.token.token_type === "NOT" || this.token.token_type === "!") {
         this.advance();
-        return ['not', this.relation(params)];
+        return ["not", this.relation(params)];
       }
 
       var lhs = this.expression(params);
 
-      while ((this.token.token_type === '=') || (this.token.token_type === 'NE')
-        || (this.token.token_type === '<') || (this.token.token_type === '>')
-        || (this.token.token_type === 'LE') || (this.token.token_type === 'GE')
-        || (this.token.token_type === 'IN') || (this.token.token_type === 'NOTIN')
-        || (this.token.token_type === 'NI') || (this.token.token_type === 'NOTNI')
-        || (this.token.token_type === 'SUBSET') || (this.token.token_type === 'NOTSUBSET')
-        || (this.token.token_type === 'SUPERSET') || (this.token.token_type === 'NOTSUPERSET')) {
-
+      while (
+        this.token.token_type === "=" ||
+        this.token.token_type === "NE" ||
+        this.token.token_type === "<" ||
+        this.token.token_type === ">" ||
+        this.token.token_type === "LE" ||
+        this.token.token_type === "GE" ||
+        this.token.token_type === "IN" ||
+        this.token.token_type === "NOTIN" ||
+        this.token.token_type === "NI" ||
+        this.token.token_type === "NOTNI" ||
+        this.token.token_type === "SUBSET" ||
+        this.token.token_type === "NOTSUBSET" ||
+        this.token.token_type === "SUPERSET" ||
+        this.token.token_type === "NOTSUPERSET"
+      ) {
         let operation = this.token.token_type.toLowerCase();
 
         let inequality_sequence = 0;
 
-        if ((this.token.token_type === '<') || (this.token.token_type === 'LE')) {
+        if (this.token.token_type === "<" || this.token.token_type === "LE") {
           inequality_sequence = -1;
-        }
-        else if ((this.token.token_type === '>') || (this.token.token_type === 'GE')) {
+        } else if (
+          this.token.token_type === ">" ||
+          this.token.token_type === "GE"
+        ) {
           inequality_sequence = 1;
         }
 
@@ -79881,83 +80156,70 @@
         let rhs = this.expression(params);
 
         if (inequality_sequence === -1) {
-          if ((this.token.token_type === '<') || this.token.token_type === 'LE') {
+          if (this.token.token_type === "<" || this.token.token_type === "LE") {
             // sequence of multiple < or <=
-            let strict = ['tuple'];
-            if (operation === '<')
-              strict.push(true);
-            else
-              strict.push(false);
+            let strict = ["tuple"];
+            if (operation === "<") strict.push(true);
+            else strict.push(false);
 
-            let args = ['tuple', lhs, rhs];
-            while ((this.token.token_type === '<') || this.token.token_type === 'LE') {
-              if (this.token.token_type === '<')
-                strict.push(true);
-              else
-                strict.push(false);
+            let args = ["tuple", lhs, rhs];
+            while (
+              this.token.token_type === "<" ||
+              this.token.token_type === "LE"
+            ) {
+              if (this.token.token_type === "<") strict.push(true);
+              else strict.push(false);
 
               this.advance();
               args.push(this.expression(params));
             }
-            lhs = ['lts', args, strict];
-          }
-          else {
+            lhs = ["lts", args, strict];
+          } else {
             lhs = [operation, lhs, rhs];
           }
-
-        }
-        else if (inequality_sequence === 1) {
-          if ((this.token.token_type === '>') || this.token.token_type === 'GE') {
+        } else if (inequality_sequence === 1) {
+          if (this.token.token_type === ">" || this.token.token_type === "GE") {
             // sequence of multiple > or >=
-            let strict = ['tuple'];
-            if (operation === '>')
-              strict.push(true);
-            else
-              strict.push(false);
+            let strict = ["tuple"];
+            if (operation === ">") strict.push(true);
+            else strict.push(false);
 
-            let args = ['tuple', lhs, rhs];
-            while ((this.token.token_type === '>') || this.token.token_type === 'GE') {
-              if (this.token.token_type === '>')
-                strict.push(true);
-              else
-                strict.push(false);
+            let args = ["tuple", lhs, rhs];
+            while (
+              this.token.token_type === ">" ||
+              this.token.token_type === "GE"
+            ) {
+              if (this.token.token_type === ">") strict.push(true);
+              else strict.push(false);
 
               this.advance();
               args.push(this.expression(params));
             }
-            lhs = ['gts', args, strict];
-          }
-          else {
+            lhs = ["gts", args, strict];
+          } else {
             lhs = [operation, lhs, rhs];
           }
-
-        }
-        else if (operation === '=') {
-          lhs = ['=', lhs, rhs];
+        } else if (operation === "=") {
+          lhs = ["=", lhs, rhs];
 
           // check for sequence of multiple =
-          while (this.token.token_type === '=') {
+          while (this.token.token_type === "=") {
             this.advance();
             lhs.push(this.expression(params));
           }
-        }
-        else {
-
+        } else {
           lhs = [operation, lhs, rhs];
         }
-
       }
 
       return lhs;
     }
 
-
     expression(params) {
-      if (this.token.token_type === '+')
-        this.advance();
+      if (this.token.token_type === "+") this.advance();
 
       let negative_begin = false;
-      if (this.token.token_type === '-') {
+      if (this.token.token_type === "-") {
         negative_begin = true;
         this.advance();
       }
@@ -79965,31 +80227,32 @@
       var lhs = this.term(params);
 
       if (negative_begin) {
-        lhs = ['-', lhs];
+        lhs = ["-", lhs];
       }
 
-      while ((this.token.token_type === '+') || (this.token.token_type === '-')
-        || (this.token.token_type === 'UNION')
-        || (this.token.token_type === 'INTERSECT')) {
-
+      while (
+        this.token.token_type === "+" ||
+        this.token.token_type === "-" ||
+        this.token.token_type === "UNION" ||
+        this.token.token_type === "INTERSECT"
+      ) {
         let operation = this.token.token_type.toLowerCase();
         let negative = false;
 
-        if (this.token.token_type === '-') {
-          operation = '+';
+        if (this.token.token_type === "-") {
+          operation = "+";
           negative = true;
           this.advance();
-        }
-        else {
+        } else {
           this.advance();
-          if (operation === '+' && this.token.token_type === '-') {
+          if (operation === "+" && this.token.token_type === "-") {
             negative = true;
             this.advance();
           }
         }
         let rhs = this.term(params);
         if (negative) {
-          rhs = ['-', rhs];
+          rhs = ["-", rhs];
         }
 
         lhs = [operation, lhs, rhs];
@@ -79998,22 +80261,33 @@
       return lhs;
     }
 
-
     term(params) {
-      var lhs = this.factor(params);
+      var lhs;
+
+      try {
+        lhs = this.factor(params);
+      } catch (e) {
+        lhs = this.missingFactor(this.token, e);
+        lhs = Number.isFinite(lhs) ? lhs : 0;
+      }
 
       var keepGoing = false;
 
       do {
         keepGoing = false;
 
-        if (this.token.token_type === '*') {
+        if (this.token.token_type === "PERCENT") {
           this.advance();
-          lhs = ['*', lhs, this.factor(params)];
+          lhs = ["%", lhs];
           keepGoing = true;
-        } else if (this.token.token_type === '/') {
+        }
+        if (this.token.token_type === "*") {
           this.advance();
-          lhs = ['/', lhs, this.factor(params)];
+          lhs = ["*", lhs, this.factor(params)];
+          keepGoing = true;
+        } else if (this.token.token_type === "/") {
+          this.advance();
+          lhs = ["/", lhs, this.factor(params)];
           keepGoing = true;
         } else {
           // this is the one case where a | could indicate a closing absolute value
@@ -80021,7 +80295,7 @@
           params2.allow_absolute_value_closing = true;
           let rhs = this.nonMinusFactor(params2);
           if (rhs !== false) {
-            lhs = ['*', lhs, rhs];
+            lhs = ["*", lhs, rhs];
             keepGoing = true;
           }
         }
@@ -80030,49 +80304,50 @@
       return lhs;
     }
 
-
     factor(params) {
-      if (this.token.token_type === '-') {
+      // console.log("factor:", this.token);
+      // console.log("before: lexer state:", this.lexer.return_state());
+      if (this.token.token_type === "-") {
         this.advance();
-        return ['-', this.factor(params)];
+        return ["-", this.factor(params)];
       }
 
       var result = this.nonMinusFactor(params);
-
+      // console.log("result", result);
       if (result === false) {
         if (this.token.token_type === "EOF") {
           throw new ParseError("Unexpected end of input", this.lexer.location);
+        } else {
+          //console.log("lexer state:", this.lexer.return_state());
+          throw new ParseError(
+            "Invalid location of '" + this.token.original_text + "'",
+            this.lexer.location
+          );
         }
-        else {
-          throw new ParseError("Invalid location of '" + this.token.original_text + "'",
-            this.lexer.location);
-        }
-      }
-      else {
+      } else {
         return result;
       }
-
     }
 
     nonMinusFactor(params) {
-
       var result = this.baseFactor(params);
 
       // allow arbitrary sequence of factorials
-      if (this.token.token_type === '!' || this.token.token_type === "'") {
+      if (this.token.token_type === "!" || this.token.token_type === "'") {
         if (result === false)
-          throw new ParseError("Invalid location of " + this.token.token_type,
-            this.lexer.location);
-        while (this.token.token_type === '!' || this.token.token_type === "'") {
-          if (this.token.token_type === '!')
-            result = ['apply', 'factorial', result];
-          else
-            result = ['prime', result];
+          throw new ParseError(
+            "Invalid location of " + this.token.token_type,
+            this.lexer.location
+          );
+        while (this.token.token_type === "!" || this.token.token_type === "'") {
+          if (this.token.token_type === "!")
+            result = ["apply", "factorial", result];
+          else result = ["prime", result];
           this.advance();
         }
       }
 
-      if (this.token.token_type === '^') {
+      if (this.token.token_type === "^") {
         if (result === false) {
           throw new ParseError("Invalid location of ^", this.lexer.location);
         }
@@ -80083,31 +80358,30 @@
         delete params2.allow_absolute_value_closing;
         delete params2.inside_absolute_value;
 
-        return ['^', result, this.factor(params2)];
+        return ["^", result, this.factor(params2)];
       }
 
       return result;
     }
 
-
-    baseFactor({ inside_absolute_value = 0,
+    baseFactor({
+      inside_absolute_value = 0,
       parse_absolute_value = true,
-      allow_absolute_value_closing = false
+      allow_absolute_value_closing = false,
+      unknownCommands = "error"
     } = {}) {
-
       var result = false;
 
-      if (this.token.token_type === 'FRAC') {
+      if (this.token.token_type === "FRAC") {
         this.advance();
 
-        if (this.token.token_type !== '{') {
+        if (this.token.token_type !== "{") {
           throw new ParseError("Expecting {", this.lexer.location);
         }
         this.advance();
 
         // determine if may be a derivative in Leibniz notation
         if (this.parseLeibnizNotation) {
-
           let original_state = this.return_state();
 
           let r = this.leibniz_notation();
@@ -80115,41 +80389,47 @@
           if (r) {
             // successfully parsed derivative in Leibniz notation, so return
             return r;
-          }
-          else {
+          } else {
             // didn't find a properly format Leibniz notation
             // so reset state and continue
             this.set_state(original_state);
           }
         }
 
-        let numerator = this.statement({ parse_absolute_value: parse_absolute_value });
+        let numerator = this.statement({
+          parse_absolute_value: parse_absolute_value,
+          unknownCommands: unknownCommands
+        });
 
-        if (this.token.token_type !== '}') {
+        if (this.token.token_type !== "}") {
           throw new ParseError("Expecting }", this.lexer.location);
         }
         this.advance();
 
-        if (this.token.token_type !== '{') {
+        if (this.token.token_type !== "{") {
           throw new ParseError("Expecting {", this.lexer.location);
         }
         this.advance();
 
-        let denominator = this.statement({ parse_absolute_value: parse_absolute_value });
+        let denominator = this.statement({
+          parse_absolute_value: parse_absolute_value,
+          unknownCommands: unknownCommands
+        });
 
-        if (this.token.token_type !== '}') {
+        if (this.token.token_type !== "}") {
           throw new ParseError("Expecting }", this.lexer.location);
         }
         this.advance();
 
-        return ['/', numerator, denominator];
+        return ["/", numerator, denominator];
       }
 
-      if (this.token.token_type === 'BEGINENVIRONMENT') {
-        let environment = /\\begin\s*{\s*([a-zA-Z0-9]+)\s*}/.exec(this.token.token_text)[1];
+      if (this.token.token_type === "BEGINENVIRONMENT") {
+        let environment = /\\begin\s*{\s*([a-zA-Z0-9]+)\s*}/.exec(
+          this.token.token_text
+        )[1];
 
-        if (['matrix', 'pmatrix', 'bmatrix'].includes(environment)) {
-
+        if (["matrix", "pmatrix", "bmatrix"].includes(environment)) {
           let n_rows = 0;
           let n_cols = 0;
 
@@ -80160,63 +80440,72 @@
 
           this.advance();
 
-
-          while (this.token.token_type !== 'ENDENVIRONMENT') {
-            if (this.token.token_type === '&') {
-              if (last_token === '&' || last_token === 'LINEBREAK') {
+          while (this.token.token_type !== "ENDENVIRONMENT") {
+            if (this.token.token_type === "&") {
+              if (last_token === "&" || last_token === "LINEBREAK") {
                 // blank entry, let entry be zero
                 row.push(0);
                 n_this_row += 1;
               }
               last_token = this.token.token_type;
               this.advance();
-            }
-            else if (this.token.token_type === 'LINEBREAK') {
-              if (last_token === '&' || last_token === 'LINEBREAK') {
+            } else if (this.token.token_type === "LINEBREAK") {
+              if (last_token === "&" || last_token === "LINEBREAK") {
                 // blank entry, let entry be zero
                 row.push(0);
                 n_this_row += 1;
               }
               all_rows.push(row);
-              if (n_this_row > n_cols)
-                n_cols = n_this_row;
+              if (n_this_row > n_cols) n_cols = n_this_row;
 
               n_rows += 1;
               n_this_row = 0;
               row = [];
               last_token = this.token.token_type;
               this.advance();
-            }
-            else {
-              if (last_token === '&' || last_token === 'LINEBREAK' || 'BEGINENVIRONMENT') {
-                row.push(this.statement({ parse_absolute_value: parse_absolute_value }));
+            } else {
+              if (
+                last_token === "&" ||
+                last_token === "LINEBREAK" ||
+                "BEGINENVIRONMENT"
+              ) {
+                row.push(
+                  this.statement({
+                    parse_absolute_value: parse_absolute_value,
+                    unknownCommands: unknownCommands
+                  })
+                );
                 n_this_row += 1;
-                last_token = ' ';
-
-              }
-              else {
-                throw new ParseError("Invalid location of " + this.token.original_text, this.lexer.location);
+                last_token = " ";
+              } else {
+                throw new ParseError(
+                  "Invalid location of " + this.token.original_text,
+                  this.lexer.location
+                );
               }
             }
           }
 
           // token is ENDENVIRONMENT
-          let environment2 = /\\end\s*{\s*([a-zA-Z0-9]+)\s*}/.exec(this.token.token_text)[1];
+          let environment2 = /\\end\s*{\s*([a-zA-Z0-9]+)\s*}/.exec(
+            this.token.token_text
+          )[1];
           if (environment2 !== environment) {
-            throw new ParseError("Expecting \\end{" + environment + "}", this.lexer.location);
+            throw new ParseError(
+              "Expecting \\end{" + environment + "}",
+              this.lexer.location
+            );
           }
 
           // add last row
-          if (last_token === '&') {
+          if (last_token === "&") {
             // blank entry, let entry be zero
             row.push(0);
             n_this_row += 1;
           }
           all_rows.push(row);
-          if (n_this_row > n_cols)
-            n_cols = n_this_row;
+          if (n_this_row > n_cols) n_cols = n_this_row;
           n_rows += 1;
-
 
           this.advance();
 
@@ -80225,36 +80514,38 @@
           let body = ["tuple"];
           for (let r of all_rows) {
             let new_row = ["tuple"].concat(r);
-            for (let i = r.length; i < n_cols; i += 1)
-              new_row.push(0);
+            for (let i = r.length; i < n_cols; i += 1) new_row.push(0);
 
             body.push(new_row);
-
           }
           result.push(body);
 
           return result;
+        } else {
+          throw new ParseError(
+            "Unrecognized environment " + environment,
+            this.lexer.location
+          );
         }
-        else {
-          throw new ParseError("Unrecognized environment " + environment, this.lexer.location);
-        }
-
       }
 
-      if (this.token.token_type === 'NUMBER') {
+      if (this.token.token_type === "NUMBER") {
         result = parseFloat(this.token.token_text);
         this.advance();
-      } else if (this.token.token_type === 'INFINITY') {
+      } else if (this.token.token_type === "INFINITY") {
         result = Infinity;
         this.advance();
-      } else if (this.token.token_type === 'SQRT') {
+      } else if (this.token.token_type === "SQRT") {
         this.advance();
 
         let root = 2;
-        if (this.token.token_type === '[') {
+        if (this.token.token_type === "[") {
           this.advance();
-          let parameter = this.statement({ parse_absolute_value: parse_absolute_value });
-          if (this.token.token_type !== ']') {
+          let parameter = this.statement({
+            parse_absolute_value: parse_absolute_value,
+            unknownCommands: unknownCommands
+          });
+          if (this.token.token_type !== "]") {
             throw new ParseError("Expecting ]", this.lexer.location);
           }
           this.advance();
@@ -80262,136 +80553,159 @@
           root = parameter;
         }
 
-        if (this.token.token_type !== '{') {
+        if (this.token.token_type !== "{") {
           throw new ParseError("Expecting {", this.lexer.location);
         }
 
         this.advance();
-        let parameter = this.statement({ parse_absolute_value: parse_absolute_value });
-        if (this.token.token_type !== '}') {
+        let parameter = this.statement({
+          parse_absolute_value: parse_absolute_value,
+          unknownCommands: unknownCommands
+        });
+        if (this.token.token_type !== "}") {
           throw new ParseError("Expecting }", this.lexer.location);
         }
         this.advance();
 
-        if (root === 2)
-          result = ['apply', 'sqrt', parameter];
-        else
-          result = ['^', parameter, ['/', 1, root]];
-      } else if (this.token.token_type === 'VAR' || this.token.token_type === 'LATEXCOMMAND'
-        || this.token.token_type === 'VARMULTICHAR') {
+        if (root === 2) result = ["apply", "sqrt", parameter];
+        else result = ["^", parameter, ["/", 1, root]];
+      } else if (
+        this.token.token_type === "VAR" ||
+        this.token.token_type === "LATEXCOMMAND" ||
+        this.token.token_type === "VARMULTICHAR"
+      ) {
         result = this.token.token_text;
 
-        if (this.token.token_type === 'LATEXCOMMAND') {
+        if (this.token.token_type === "LATEXCOMMAND") {
           result = result.slice(1);
-          if (!(this.appliedFunctionSymbols.includes(result)
-            || this.functionSymbols.includes(result)
-            || this.allowedLatexSymbols.includes(result)
-          )) {
-            throw new ParseError("Unrecognized latex command " + this.token.original_text,
-              this.lexer.location);
+
+          const isKnownCommand =
+            this.appliedFunctionSymbols.includes(result) ||
+            this.functionSymbols.includes(result) ||
+            this.allowedLatexSymbols.includes(result);
+
+          if (!isKnownCommand) {
+            if (this.unknownCommandBehavior === "error") {
+              throw new ParseError(
+                "Unrecognized latex command " + this.token.original_text,
+                this.lexer.location
+              );
+            }
           }
-        }
-        else if (this.token.token_type === 'VARMULTICHAR') {
+        } else if (this.token.token_type === "VARMULTICHAR") {
           // strip out name of variable from \var command
           result = /\\var\s*\{\s*([a-zA-Z0-9]+)\s*\}/.exec(result)[1];
         }
 
-        if (this.appliedFunctionSymbols.includes(result)
-          || this.functionSymbols.includes(result)) {
+        if (
+          this.appliedFunctionSymbols.includes(result) ||
+          this.functionSymbols.includes(result)
+        ) {
           let must_apply = false;
-          if (this.appliedFunctionSymbols.includes(result))
-            must_apply = true;
+          if (this.appliedFunctionSymbols.includes(result)) must_apply = true;
 
           this.advance();
 
-          if (this.token.token_type === '_') {
+          if (this.token.token_type === "_") {
             this.advance();
-            let subresult = this.baseFactor({ parse_absolute_value: parse_absolute_value });
+            let subresult = this.baseFactor({
+              parse_absolute_value: parse_absolute_value
+            });
 
             // since baseFactor could return false, must check
             if (subresult === false) {
               if (this.token.token_type === "EOF") {
-                throw new ParseError("Unexpected end of input",
-                  this.lexer.location);
-              }
-              else {
-                throw new ParseError("Invalid location of '" + this.token.original_text
-                  + "'", this.lexer.location);
+                throw new ParseError(
+                  "Unexpected end of input",
+                  this.lexer.location
+                );
+              } else {
+                throw new ParseError(
+                  "Invalid location of '" + this.token.original_text + "'",
+                  this.lexer.location
+                );
               }
             }
-            result = ['_', result, subresult];
+            result = ["_", result, subresult];
           }
 
           while (this.token.token_type === "'") {
-            result = ['prime', result];
+            result = ["prime", result];
             this.advance();
           }
 
-          if (this.token.token_type === '^') {
+          if (this.token.token_type === "^") {
             this.advance();
-            result = ['^', result, this.factor({ parse_absolute_value: parse_absolute_value })];
+            result = [
+              "^",
+              result,
+              this.factor({ parse_absolute_value: parse_absolute_value })
+            ];
           }
 
-          if (this.token.token_type === '{' || this.token.token_type === '(') {
+          if (this.token.token_type === "{" || this.token.token_type === "(") {
             let expected_right;
-            if (this.token.token_type === '{')
-              expected_right = '}';
-            else
-              expected_right = ')';
+            if (this.token.token_type === "{") expected_right = "}";
+            else expected_right = ")";
 
             this.advance();
             let parameters = this.statement_list();
 
             if (this.token.token_type !== expected_right) {
-              throw new ParseError('Expecting ' + expected_right,
-                this.lexer.location);
+              throw new ParseError(
+                "Expecting " + expected_right,
+                this.lexer.location
+              );
             }
             this.advance();
 
-            if (parameters[0] === 'list') {
+            if (parameters[0] === "list") {
               // rename from list to tuple
-              parameters[0] = 'tuple';
+              parameters[0] = "tuple";
             }
 
-            result = ['apply', result, parameters];
-
-          }
-          else {
+            result = ["apply", result, parameters];
+          } else {
             // if was an applied function symbol,
             // cannot omit argument
             if (must_apply) {
               if (!this.allowSimplifiedFunctionApplication)
-                throw new ParseError("Expecting ( after function",
-                  this.lexer.location);
+                throw new ParseError(
+                  "Expecting ( after function",
+                  this.lexer.location
+                );
 
               // if allow simplied function application
               // let the argument be the next factor
-              result = ['apply', result, this.factor({ parse_absolute_value: parse_absolute_value })];
+              result = [
+                "apply",
+                result,
+                this.factor({ parse_absolute_value: parse_absolute_value })
+              ];
             }
           }
-        }
-        else {
+        } else {
           this.advance();
         }
-      } else if (this.token.token_type === '(' || this.token.token_type === '['
-        || this.token.token_type === '{'
-        || this.token.token_type === 'LBRACE') {
+      } else if (
+        this.token.token_type === "(" ||
+        this.token.token_type === "[" ||
+        this.token.token_type === "{" ||
+        this.token.token_type === "LBRACE"
+      ) {
         let token_left = this.token.token_type;
         let expected_right, other_right;
-        if (this.token.token_type === '(') {
-          expected_right = ')';
-          other_right = ']';
-        }
-        else if (this.token.token_type === '[') {
-          expected_right = ']';
-          other_right = ')';
-        }
-        else if (this.token.token_type === '{') {
-          expected_right = '}';
+        if (this.token.token_type === "(") {
+          expected_right = ")";
+          other_right = "]";
+        } else if (this.token.token_type === "[") {
+          expected_right = "]";
+          other_right = ")";
+        } else if (this.token.token_type === "{") {
+          expected_right = "}";
           other_right = null;
-        }
-        else {
-          expected_right = 'RBRACE';
+        } else {
+          expected_right = "RBRACE";
           other_right = null;
         }
 
@@ -80405,50 +80719,45 @@
 
         if (this.token.token_type !== expected_right) {
           if (n_elements !== 2 || other_right === null) {
-            throw new ParseError('Expecting ' + expected_right,
-              this.lexer.location);
-          }
-          else if (this.token.token_type !== other_right) {
-            throw new ParseError('Expecting ) or ]', this.lexer.location);
+            throw new ParseError(
+              "Expecting " + expected_right,
+              this.lexer.location
+            );
+          } else if (this.token.token_type !== other_right) {
+            throw new ParseError("Expecting ) or ]", this.lexer.location);
           }
 
           // half-open interval
-          result[0] = 'tuple';
-          result = ['interval', result];
+          result[0] = "tuple";
+          result = ["interval", result];
           let closed;
-          if (token_left === '(')
-            closed = ['tuple', false, true];
-          else
-            closed = ['tuple', true, false];
+          if (token_left === "(") closed = ["tuple", false, true];
+          else closed = ["tuple", true, false];
           result.push(closed);
-
-        }
-        else if (n_elements >= 2) {
-          if (token_left === '(' || token_left === '{') {
-            result[0] = 'tuple';
+        } else if (n_elements >= 2) {
+          if (token_left === "(" || token_left === "{") {
+            result[0] = "tuple";
+          } else if (token_left === "[") {
+            result[0] = "array";
+          } else {
+            result[0] = "set";
           }
-          else if (token_left === '[') {
-            result[0] = 'array';
-          }
-          else {
-            result[0] = 'set';
-          }
-        }
-        else if (token_left === 'LBRACE') {
-          if (result[0] === '|' || result[0] === ':') {
-            result = ['set', result];  // set builder notation
-          }
-          else {
-            result = ['set', result];  // singleton set
+        } else if (token_left === "LBRACE") {
+          if (result[0] === "|" || result[0] === ":") {
+            result = ["set", result]; // set builder notation
+          } else {
+            result = ["set", result]; // singleton set
           }
         }
 
         this.advance();
-
-      } else if (this.token.token_type[0] === '|' && parse_absolute_value &&
-        (inside_absolute_value === 0 || !allow_absolute_value_closing ||
-          this.token.token_type[1] === 'L')) {
-
+      } else if (
+        this.token.token_type[0] === "|" &&
+        parse_absolute_value &&
+        (inside_absolute_value === 0 ||
+          !allow_absolute_value_closing ||
+          this.token.token_type[1] === "L")
+      ) {
         // allow the opening of an absolute value here if either
         // - we aren't already inside an absolute value (inside_absolute_value==0),
         // - we don't allows an absolute value closing, or
@@ -80460,38 +80769,43 @@
 
         this.advance();
 
-        result = this.statement({ inside_absolute_value: inside_absolute_value });
-        result = ['apply', 'abs', result];
+        result = this.statement({
+          inside_absolute_value: inside_absolute_value,
+          unknownCommands: unknownCommands
+        });
+        result = ["apply", "abs", result];
 
-        if (this.token.token_type !== '|') {
-          throw new ParseError('Expecting |', this.lexer.location);
+        if (this.token.token_type !== "|") {
+          throw new ParseError("Expecting |", this.lexer.location);
         }
 
         this.advance();
       }
 
-      if (this.token.token_type === '_') {
+      if (this.token.token_type === "_") {
         if (result === false) {
           throw new ParseError("Invalid location of _", this.lexer.location);
         }
         this.advance();
-        let subresult = this.baseFactor({ parse_absolute_value: parse_absolute_value });
+        let subresult = this.baseFactor({
+          parse_absolute_value: parse_absolute_value
+        });
 
         if (subresult === false) {
           if (this.token.token_type === "EOF") {
             throw new ParseError("Unexpected end of input", this.lexer.location);
-          }
-          else {
-            throw new ParseError("Invalid location of '" + this.token.original_text + "'",
-              this.lexer.location);
+          } else {
+            throw new ParseError(
+              "Invalid location of '" + this.token.original_text + "'",
+              this.lexer.location
+            );
           }
         }
-        return ['_', result, subresult];
+        return ["_", result, subresult];
       }
 
       return result;
     }
-
 
     leibniz_notation() {
       // attempt to find and return a derivative in Leibniz notation
@@ -80507,31 +80821,33 @@
       let var2s = [];
       let var2_exponents = [];
 
-      if (this.token.token_type === "LATEXCOMMAND" && result.slice(1) === "partial")
+      if (
+        this.token.token_type === "LATEXCOMMAND" &&
+        result.slice(1) === "partial"
+      )
         deriv_symbol = "∂";
       else if (this.token.token_type === "VAR" && result === "d")
         deriv_symbol = "d";
-      else
-        return false;
+      else return false;
 
       // since have just a d or ∂
       // one option is that have a ^ followed by an integer next possibly in {}
 
       this.advance();
 
-      if (this.token.token_type === '^') {
+      if (this.token.token_type === "^") {
         // so far have d or ∂ followed by ^
         // must be followed by an integer
         this.advance();
 
         let in_braces = false;
-        if (this.token.token_type === '{') {
+        if (this.token.token_type === "{") {
           in_braces = true;
 
           this.advance();
         }
 
-        if (this.token.token_type !== 'NUMBER') {
+        if (this.token.token_type !== "NUMBER") {
           return false;
         }
 
@@ -80546,7 +80862,7 @@
         if (in_braces) {
           this.advance();
 
-          if (this.token.token_type !== '}') {
+          if (this.token.token_type !== "}") {
             return false;
           }
         }
@@ -80554,23 +80870,18 @@
         this.advance();
       }
 
-
       // since have a d or ∂, optionally followed by ^ and integer
       // next we must have:
       // a VAR, a VARMULTICHAR, or a LATEXCOMMAND that is in allowedLatexSymbols
 
-      if (this.token.token_type === 'VAR')
-        var1 = this.token.token_text;
-      else if (this.token.token_type === 'VARMULTICHAR') {
+      if (this.token.token_type === "VAR") var1 = this.token.token_text;
+      else if (this.token.token_type === "VARMULTICHAR") {
         // strip out name of variable from \var command
         var1 = /\\var\s*\{\s*([a-zA-Z0-9]+)\s*\}/.exec(this.token.token_text)[1];
-      }
-      else if (this.token.token_type === 'LATEXCOMMAND') {
+      } else if (this.token.token_type === "LATEXCOMMAND") {
         result = this.token.token_text.slice(1);
-        if (this.allowedLatexSymbols.includes(result))
-          var1 = result;
-        else
-          return false;
+        if (this.allowedLatexSymbols.includes(result)) var1 = result;
+        else return false;
       }
 
       // Finished numerator.
@@ -80578,18 +80889,16 @@
 
       this.advance();
 
-      if (this.token.token_type !== '}') {
+      if (this.token.token_type !== "}") {
         return false;
       }
 
       this.advance();
 
-      if (this.token.token_type !== '{') {
+      if (this.token.token_type !== "{") {
         return false;
-      }
-      else {
+      } else {
         this.advance();
-
       }
 
       // In denominator now
@@ -80602,14 +80911,19 @@
       let exponent_sum = 0;
 
       while (true) {
-
         // next must be
         // - a VAR equal to deriv_symbol="d" or \partial when deriv_symbol = "∂"
 
-
-        if (!((deriv_symbol === "d" && this.token.token_type === "VAR" && this.token.token_text === "d")
-          || (deriv_symbol === "∂" && this.token.token_type === "LATEXCOMMAND"
-            && this.token.token_text.slice(1) === "partial"))) {
+        if (
+          !(
+            (deriv_symbol === "d" &&
+              this.token.token_type === "VAR" &&
+              this.token.token_text === "d") ||
+            (deriv_symbol === "∂" &&
+              this.token.token_type === "LATEXCOMMAND" &&
+              this.token.token_text.slice(1) === "partial")
+          )
+        ) {
           return false;
         }
 
@@ -80618,21 +80932,19 @@
 
         this.advance();
 
-        if (this.token.token_type === 'VAR')
-          var2s.push(this.token.token_text);
-        else if (this.token.token_type === 'VARMULTICHAR') {
+        if (this.token.token_type === "VAR") var2s.push(this.token.token_text);
+        else if (this.token.token_type === "VARMULTICHAR") {
           // strip out name of variable from \var command
-          var2s.push(/\\var\s*\{\s*([a-zA-Z0-9]+)\s*\}/.exec(this.token.token_text)[1]);
-        }
-        else if (this.token.token_type === 'LATEXCOMMAND') {
+          var2s.push(
+            /\\var\s*\{\s*([a-zA-Z0-9]+)\s*\}/.exec(this.token.token_text)[1]
+          );
+        } else if (this.token.token_type === "LATEXCOMMAND") {
           let r = this.token.token_text.slice(1);
-          if (this.allowedLatexSymbols.includes(r))
-            var2s.push(r);
+          if (this.allowedLatexSymbols.includes(r)) var2s.push(r);
           else {
             return false;
           }
-        }
-        else {
+        } else {
           return false;
         }
         // have derivative and variable, now check for optional ^ followed by number
@@ -80641,18 +80953,17 @@
 
         this.advance();
 
-        if (this.token.token_type === '^') {
-
+        if (this.token.token_type === "^") {
           this.advance();
 
           let in_braces = false;
-          if (this.token.token_type === '{') {
+          if (this.token.token_type === "{") {
             in_braces = true;
 
             this.advance();
           }
 
-          if (this.token.token_type !== 'NUMBER') {
+          if (this.token.token_type !== "NUMBER") {
             return false;
           }
 
@@ -80665,13 +80976,12 @@
           if (in_braces) {
             this.advance();
 
-            if (this.token.token_type !== '}') {
+            if (this.token.token_type !== "}") {
               return false;
             }
           }
 
           this.advance();
-
         }
 
         var2_exponents.push(this_exponent);
@@ -80683,11 +80993,9 @@
 
         // possibly found derivative
         if (exponent_sum === n_deriv) {
-
           // next token must be a }
-          if (this.token.token_type !== '}') {
+          if (this.token.token_type !== "}") {
             return false;
-
           }
 
           // found derivative!
@@ -80695,29 +81003,23 @@
           this.advance();
 
           let result_name = "derivative_leibniz";
-          if (deriv_symbol === "∂")
-            result_name = "partial_" + result_name;
+          if (deriv_symbol === "∂") result_name = "partial_" + result_name;
 
           result = [result_name];
 
-          if (n_deriv === 1)
-            result.push(var1);
-          else
-            result.push(["tuple", var1, n_deriv]);
+          if (n_deriv === 1) result.push(var1);
+          else result.push(["tuple", var1, n_deriv]);
 
           let r2 = [];
           for (let i = 0; i < var2s.length; i += 1) {
-            if (var2_exponents[i] === 1)
-              r2.push(var2s[i]);
-            else
-              r2.push(["tuple", var2s[i], var2_exponents[i]]);
+            if (var2_exponents[i] === 1) r2.push(var2s[i]);
+            else r2.push(["tuple", var2s[i], var2_exponents[i]]);
           }
           r2 = ["tuple"].concat(r2);
 
           result.push(r2);
 
           return result;
-
         }
       }
     }
@@ -83200,7 +83502,15 @@
   }
 
   function parseLatex(string, pars) {
-    return new Expression(latexToAst$1.convert(string), Context);
+    /**
+     * pars: Object, keys =>
+     *
+     *   unknownCommands: enum, values => 'error', 'passthrough'
+     *
+     *   when encountering an unknown latex command, it will either throw an error
+     *   or alternatively, let the command pass through as a string, to be handled elsewhere in the chain of tools
+     */
+    return new Expression(latexToAst$1.convert(string, pars), Context);
   }
 
   function parseMml(string, pars) {
