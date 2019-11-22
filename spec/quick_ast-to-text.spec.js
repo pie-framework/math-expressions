@@ -706,7 +706,11 @@ test("ne", () => {
 
   expect(converter.convert(["ne", 0, 10])).toEqual("0 != 10");
 });
-
+test("%", () => {
+  const converter = new astToText();
+  expect(converter.convert(["%", 100])).toEqual("100%");
+  expect(converter.convert(["*", ["%", 100], 50])).toEqual("(100%) * 50");
+});
 //
 // describe("ast to text", function() {
 //     it("sum of two numbers", function() {
