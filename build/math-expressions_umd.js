@@ -80087,7 +80087,6 @@
       this.advance();
 
       var result = this.statement_list(pars);
-      // console.log("this.token.token_type:", this.token);
       if (this.token.token_type !== "EOF") {
         throw new ParseError(
           "Invalid location of '" + this.token.original_text + "'",
