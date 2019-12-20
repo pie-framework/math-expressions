@@ -28,20 +28,20 @@ describe("lexer", () => {
   //   console.log("list:", list);
   // });
 
-  it("relaxed", () => {
-    const r = new LatexToAstRelaxed();
-    r.convert("\\frac{12}{200}");
-  });
+  // it("relaxed", () => {
+  //   const r = new LatexToAstRelaxed();
+  //   r.convert("\\frac{12}{200}");
+  // });
 
-  it.only("%", () => {
-    const l = new lexer([["%", "PERCENT"]]);
+  // it.only("%", () => {
+  //   const l = new lexer([["%", "PERCENT"]]);
 
-    l.set_input("%");
-    const t = l.advance();
-    console.log("t:", t);
-  });
-  it("\\%", () => {
-    const l = new lexer([["\\%", "PERCENT"]]);
+  //   l.set_input("%");
+  //   const t = l.advance();
+  //   console.log("t:", t);
+  // });
+  it.only("\\%", () => {
+    const l = new lexer([["\\\\%", "PERCENT"]]);
 
     l.set_input("\\%");
     const t = l.advance();

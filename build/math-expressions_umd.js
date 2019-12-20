@@ -70732,7 +70732,6 @@
    *
    */
 
-
   // UPDATETHIS: Is this grammar still correct?
 
   /* Grammar:
@@ -70848,186 +70847,185 @@
 
   // in order to parse as scientific notation, e.g., 3.2E-12 or .7E+3,
   // it must be at the end or followed a comma, |, ), }, or ]
-  const sci_notat_exp_regex = '(E[+\\-]?[0-9]+\\s*($|(?=\\,|\\||\\)|\\}|\\])))?';
-
+  const sci_notat_exp_regex = "(E[+\\-]?[0-9]+\\s*($|(?=\\,|\\||\\)|\\}|\\])))?";
 
   const text_rules = [
+    ["%", "PERCENT"],
+    ["\\\\%", "PERCENT"],
     // in order to parse as scientific notation, e.g., 3.2E-12 or .7E+3,
     // it must be at the end or followed a |, or a closing ),}, or ]
-    ['[0-9]+(\\.[0-9]*)?' + sci_notat_exp_regex, 'NUMBER'],
-    ['\\.[0-9]+' + sci_notat_exp_regex, 'NUMBER'],
-    ['\\*\\*', '^'],
-    ['\\*', '*'], // there is some variety in multiplication symbols
-    ['\\xB7', '*'], // '·'
-    ['\u00B7', '*'], // '·'
-    ['\u2022', '*'], // '•'
-    ['\u22C5', '*'], // '⋅'
-    ['\u00D7', '*'], // '×'
-    ['/', '/'],
-    ['-', '-'], // there is quite some variety with unicode hyphens
-    ['\u058A', '-'], // '֊'
-    ['\u05BE', '-'], // '־'
-    ['\u1806', '-'], // '᠆'
-    ['\u2010', '-'], // '‐'
-    ['\u2011', '-'], // '‑'
-    ['\u2012', '-'], // '‒'
-    ['\u2013', '-'], // '–'
-    ['\u2014', '-'], // '—'
-    ['\u2015', '-'], // '―'
-    ['\u207B', '-'], // '⁻'
-    ['\u208B', '-'], // '₋'
-    ['\u2212', '-'], // '−'
-    ['\u2E3A', '-'], // '⸺'
-    ['\u2E3B', '-'], // '⸻'
-    ['\uFE58', '-'], // '﹘'
-    ['\uFE63', '-'], // '﹣'
-    ['\uFF0D', '-'], // '－'
-    ['\\+', '+'],
-    ['\\^', '^'], // a few ways to denote exponentiation
-    ['\u2038', '^'], // '‸'
-    ['\u028C', '^'], // 'ʌ'
-    ['\\|', '|'],
-    ['\\(', '('],
-    ['\\)', ')'],
-    ['\\[', '['],
-    ['\\]', ']'],
-    ['\\{', '{'],
-    ['\\}', '}'],
-    [',', ','],
-    [':', ':'],
+    ["[0-9]+(\\.[0-9]*)?" + sci_notat_exp_regex, "NUMBER"],
+    ["\\.[0-9]+" + sci_notat_exp_regex, "NUMBER"],
+    ["\\*\\*", "^"],
+    ["\\*", "*"], // there is some variety in multiplication symbols
+    ["\\xB7", "*"], // '·'
+    ["\u00B7", "*"], // '·'
+    ["\u2022", "*"], // '•'
+    ["\u22C5", "*"], // '⋅'
+    ["\u00D7", "*"], // '×'
+    ["/", "/"],
+    ["-", "-"], // there is quite some variety with unicode hyphens
+    ["\u058A", "-"], // '֊'
+    ["\u05BE", "-"], // '־'
+    ["\u1806", "-"], // '᠆'
+    ["\u2010", "-"], // '‐'
+    ["\u2011", "-"], // '‑'
+    ["\u2012", "-"], // '‒'
+    ["\u2013", "-"], // '–'
+    ["\u2014", "-"], // '—'
+    ["\u2015", "-"], // '―'
+    ["\u207B", "-"], // '⁻'
+    ["\u208B", "-"], // '₋'
+    ["\u2212", "-"], // '−'
+    ["\u2E3A", "-"], // '⸺'
+    ["\u2E3B", "-"], // '⸻'
+    ["\uFE58", "-"], // '﹘'
+    ["\uFE63", "-"], // '﹣'
+    ["\uFF0D", "-"], // '－'
+    ["\\+", "+"],
+    ["\\^", "^"], // a few ways to denote exponentiation
+    ["\u2038", "^"], // '‸'
+    ["\u028C", "^"], // 'ʌ'
+    ["\\|", "|"],
+    ["\\(", "("],
+    ["\\)", ")"],
+    ["\\[", "["],
+    ["\\]", "]"],
+    ["\\{", "{"],
+    ["\\}", "}"],
+    [",", ","],
+    [":", ":"],
 
-    ['\u03B1', 'VARMULTICHAR', 'alpha'], // 'α'
-    ['\u03B2', 'VARMULTICHAR', 'beta'], // 'β'
-    ['\u03D0', 'VARMULTICHAR', 'beta'], // 'ϐ'
-    ['\u0393', 'VARMULTICHAR', 'Gamma'], // 'Γ'
-    ['\u03B3', 'VARMULTICHAR', 'gamma'], // 'γ'
-    ['\u0394', 'VARMULTICHAR', 'Delta'], // 'Δ'
-    ['\u03B4', 'VARMULTICHAR', 'delta'], // 'δ'
-    ['\u03B5', 'VARMULTICHAR', 'epsilon'], // 'ε' should this be varepsilon?
-    ['\u03F5', 'VARMULTICHAR', 'epsilon'], // 'ϵ'
-    ['\u03B6', 'VARMULTICHAR', 'zeta'], // 'ζ'
-    ['\u03B7', 'VARMULTICHAR', 'eta'], // 'η'
-    ['\u0398', 'VARMULTICHAR', 'Theta'], // 'Θ'
-    ['\u03F4', 'VARMULTICHAR', 'Theta'], // 'ϴ'
-    ['\u03B8', 'VARMULTICHAR', 'theta'], // 'θ'
-    ['\u1DBF', 'VARMULTICHAR', 'theta'], // 'ᶿ'
-    ['\u03D1', 'VARMULTICHAR', 'theta'], // 'ϑ'
-    ['\u03B9', 'VARMULTICHAR', 'iota'], // 'ι'
-    ['\u03BA', 'VARMULTICHAR', 'kappa'], // 'κ'
-    ['\u039B', 'VARMULTICHAR', 'Lambda'], // 'Λ'
-    ['\u03BB', 'VARMULTICHAR', 'lambda'], // 'λ'
-    ['\u03BC', 'VARMULTICHAR', 'mu'], // 'μ'
-    ['\u00B5', 'VARMULTICHAR', 'mu'], // 'µ' should this be micro?
-    ['\u03BD', 'VARMULTICHAR', 'nu'], // 'ν'
-    ['\u039E', 'VARMULTICHAR', 'Xi'], // 'Ξ'
-    ['\u03BE', 'VARMULTICHAR', 'xi'], // 'ξ'
-    ['\u03A0', 'VARMULTICHAR', 'Pi'], // 'Π'
-    ['\u03C0', 'VARMULTICHAR', 'pi'], // 'π'
-    ['\u03D6', 'VARMULTICHAR', 'pi'], // 'ϖ' should this be varpi?
-    ['\u03C1', 'VARMULTICHAR', 'rho'], // 'ρ'
-    ['\u03F1', 'VARMULTICHAR', 'rho'], // 'ϱ' should this be varrho?
-    ['\u03A3', 'VARMULTICHAR', 'Sigma'], // 'Σ'
-    ['\u03C3', 'VARMULTICHAR', 'sigma'], // 'σ'
-    ['\u03C2', 'VARMULTICHAR', 'sigma'], // 'ς' should this be varsigma?
-    ['\u03C4', 'VARMULTICHAR', 'tau'], // 'τ'
-    ['\u03A5', 'VARMULTICHAR', 'Upsilon'], // 'Υ'
-    ['\u03C5', 'VARMULTICHAR', 'upsilon'], // 'υ'
-    ['\u03A6', 'VARMULTICHAR', 'Phi'], // 'Φ'
-    ['\u03C6', 'VARMULTICHAR', 'phi'], // 'φ' should this be varphi?
-    ['\u03D5', 'VARMULTICHAR', 'phi'], // 'ϕ'
-    ['\u03A8', 'VARMULTICHAR', 'Psi'], // 'Ψ'
-    ['\u03C8', 'VARMULTICHAR', 'psi'], // 'ψ'
-    ['\u03A9', 'VARMULTICHAR', 'Omega'], // 'Ω'
-    ['\u03C9', 'VARMULTICHAR', 'omega'], // 'ω'
+    ["\u03B1", "VARMULTICHAR", "alpha"], // 'α'
+    ["\u03B2", "VARMULTICHAR", "beta"], // 'β'
+    ["\u03D0", "VARMULTICHAR", "beta"], // 'ϐ'
+    ["\u0393", "VARMULTICHAR", "Gamma"], // 'Γ'
+    ["\u03B3", "VARMULTICHAR", "gamma"], // 'γ'
+    ["\u0394", "VARMULTICHAR", "Delta"], // 'Δ'
+    ["\u03B4", "VARMULTICHAR", "delta"], // 'δ'
+    ["\u03B5", "VARMULTICHAR", "epsilon"], // 'ε' should this be varepsilon?
+    ["\u03F5", "VARMULTICHAR", "epsilon"], // 'ϵ'
+    ["\u03B6", "VARMULTICHAR", "zeta"], // 'ζ'
+    ["\u03B7", "VARMULTICHAR", "eta"], // 'η'
+    ["\u0398", "VARMULTICHAR", "Theta"], // 'Θ'
+    ["\u03F4", "VARMULTICHAR", "Theta"], // 'ϴ'
+    ["\u03B8", "VARMULTICHAR", "theta"], // 'θ'
+    ["\u1DBF", "VARMULTICHAR", "theta"], // 'ᶿ'
+    ["\u03D1", "VARMULTICHAR", "theta"], // 'ϑ'
+    ["\u03B9", "VARMULTICHAR", "iota"], // 'ι'
+    ["\u03BA", "VARMULTICHAR", "kappa"], // 'κ'
+    ["\u039B", "VARMULTICHAR", "Lambda"], // 'Λ'
+    ["\u03BB", "VARMULTICHAR", "lambda"], // 'λ'
+    ["\u03BC", "VARMULTICHAR", "mu"], // 'μ'
+    ["\u00B5", "VARMULTICHAR", "mu"], // 'µ' should this be micro?
+    ["\u03BD", "VARMULTICHAR", "nu"], // 'ν'
+    ["\u039E", "VARMULTICHAR", "Xi"], // 'Ξ'
+    ["\u03BE", "VARMULTICHAR", "xi"], // 'ξ'
+    ["\u03A0", "VARMULTICHAR", "Pi"], // 'Π'
+    ["\u03C0", "VARMULTICHAR", "pi"], // 'π'
+    ["\u03D6", "VARMULTICHAR", "pi"], // 'ϖ' should this be varpi?
+    ["\u03C1", "VARMULTICHAR", "rho"], // 'ρ'
+    ["\u03F1", "VARMULTICHAR", "rho"], // 'ϱ' should this be varrho?
+    ["\u03A3", "VARMULTICHAR", "Sigma"], // 'Σ'
+    ["\u03C3", "VARMULTICHAR", "sigma"], // 'σ'
+    ["\u03C2", "VARMULTICHAR", "sigma"], // 'ς' should this be varsigma?
+    ["\u03C4", "VARMULTICHAR", "tau"], // 'τ'
+    ["\u03A5", "VARMULTICHAR", "Upsilon"], // 'Υ'
+    ["\u03C5", "VARMULTICHAR", "upsilon"], // 'υ'
+    ["\u03A6", "VARMULTICHAR", "Phi"], // 'Φ'
+    ["\u03C6", "VARMULTICHAR", "phi"], // 'φ' should this be varphi?
+    ["\u03D5", "VARMULTICHAR", "phi"], // 'ϕ'
+    ["\u03A8", "VARMULTICHAR", "Psi"], // 'Ψ'
+    ["\u03C8", "VARMULTICHAR", "psi"], // 'ψ'
+    ["\u03A9", "VARMULTICHAR", "Omega"], // 'Ω'
+    ["\u03C9", "VARMULTICHAR", "omega"], // 'ω'
 
+    ["oo\\b", "INFINITY"],
+    ["OO\\b", "INFINITY"],
+    ["infty\\b", "INFINITY"],
+    ["infinity\\b", "INFINITY"],
+    ["Infinity\\b", "INFINITY"],
+    ["\u221E", "INFINITY"], // '∞'
 
-    ['oo\\b', 'INFINITY'],
-    ['OO\\b', 'INFINITY'],
-    ['infty\\b', 'INFINITY'],
-    ['infinity\\b', 'INFINITY'],
-    ['Infinity\\b', 'INFINITY'],
-    ['\u221E', 'INFINITY'], // '∞'
+    ["\u212F", "VAR", "e"], // 'ℯ'
 
-    ['\u212F', 'VAR', 'e'], // 'ℯ'
+    ["\u2660", "VARMULTICHAR", "spade"], // '♠'
+    ["\u2661", "VARMULTICHAR", "heart"], // '♡'
+    ["\u2662", "VARMULTICHAR", "diamond"], // '♢'
+    ["\u2663", "VARMULTICHAR", "club"], // '♣'
+    ["\u2605", "VARMULTICHAR", "bigstar"], // '★'
+    ["\u25EF", "VARMULTICHAR", "bigcirc"], // '◯'
+    ["\u25CA", "VARMULTICHAR", "lozenge"], // '◊'
+    ["\u25B3", "VARMULTICHAR", "bigtriangleup"], // '△'
+    ["\u25BD", "VARMULTICHAR", "bigtriangledown"], // '▽'
+    ["\u29EB", "VARMULTICHAR", "blacklozenge"], // '⧫'
+    ["\u25A0", "VARMULTICHAR", "blacksquare"], // '■'
+    ["\u25B2", "VARMULTICHAR", "blacktriangle"], // '▲'
+    ["\u25BC", "VARMULTICHAR", "blacktriangledown"], //'▼'
+    ["\u25C0", "VARMULTICHAR", "blacktriangleleft"], // '◀'
+    ["\u25B6", "VARMULTICHAR", "blacktriangleright"], // '▶'
+    ["\u25A1", "VARMULTICHAR", "Box"], // '□'
+    ["\u2218", "VARMULTICHAR", "circ"], // '∘'
+    ["\u22C6", "VARMULTICHAR", "star"], // '⋆'
 
-    ['\u2660', 'VARMULTICHAR', 'spade'], // '♠'
-    ['\u2661', 'VARMULTICHAR', 'heart'], // '♡'
-    ['\u2662', 'VARMULTICHAR', 'diamond'], // '♢'
-    ['\u2663', 'VARMULTICHAR', 'club'], // '♣'
-    ['\u2605', 'VARMULTICHAR', 'bigstar'], // '★'
-    ['\u25EF', 'VARMULTICHAR', 'bigcirc'], // '◯'
-    ['\u25CA', 'VARMULTICHAR', 'lozenge'], // '◊'
-    ['\u25B3', 'VARMULTICHAR', 'bigtriangleup'], // '△'
-    ['\u25BD', 'VARMULTICHAR', 'bigtriangledown'], // '▽'
-    ['\u29EB', 'VARMULTICHAR', 'blacklozenge'], // '⧫'
-    ['\u25A0', 'VARMULTICHAR', 'blacksquare'], // '■'
-    ['\u25B2', 'VARMULTICHAR', 'blacktriangle'], // '▲'
-    ['\u25BC', 'VARMULTICHAR', 'blacktriangledown'], //'▼'
-    ['\u25C0', 'VARMULTICHAR', 'blacktriangleleft'], // '◀'
-    ['\u25B6', 'VARMULTICHAR', 'blacktriangleright'], // '▶'
-    ['\u25A1', 'VARMULTICHAR', 'Box'], // '□'
-    ['\u2218', 'VARMULTICHAR', 'circ'], // '∘'
-    ['\u22C6', 'VARMULTICHAR', 'star'], // '⋆'
+    ["and\\b", "AND"],
+    ["\\&\\&?", "AND"],
+    ["\u2227", "AND"], // '∧'
 
-    ['and\\b', 'AND'],
-    ['\\&\\&?', 'AND'],
-    ['\u2227', 'AND'], // '∧'
+    ["or\\b", "OR"],
+    ["\u2228", "OR"], // '∨'
 
-    ['or\\b', 'OR'],
-    ['\u2228', 'OR'], // '∨'
+    ["not\\b", "NOT"],
+    ["\u00ac", "NOT"], // '¬'
 
-    ['not\\b', 'NOT'],
-    ['\u00ac', 'NOT'], // '¬'
+    ["=", "="],
+    ["\u1400", "="], // '᐀'
+    ["\u30A0", "="], // '゠'
+    ["!=", "NE"],
+    ["\u2260", "NE"], // '≠'
+    ["<=", "LE"],
+    ["\u2264", "LE"], // '≤'
+    [">=", "GE"],
+    ["\u2265", "GE"], // '≥'
+    ["<", "<"],
+    [">", ">"],
 
-    ['=', '='],
-    ['\u1400', '='], // '᐀'
-    ['\u30A0', '='], // '゠'
-    ['!=', 'NE'],
-    ['\u2260', 'NE'], // '≠'
-    ['<=', 'LE'],
-    ['\u2264', 'LE'], // '≤'
-    ['>=', 'GE'],
-    ['\u2265', 'GE'], // '≥'
-    ['<', '<'],
-    ['>', '>'],
+    ["elementof\\b", "IN"],
+    ["\u2208", "IN"], // '∈'
 
-    ['elementof\\b', 'IN'],
-    ['\u2208', 'IN'], // '∈'
+    ["notelementof\\b", "NOTIN"],
+    ["\u2209", "NOTIN"], //'∉'
 
-    ['notelementof\\b', 'NOTIN'],
-    ['\u2209', 'NOTIN'], //'∉'
+    ["containselement\\b", "NI"],
+    ["\u220B", "NI"], // '∋'
 
-    ['containselement\\b', 'NI'],
-    ['\u220B', 'NI'], // '∋'
+    ["notcontainselement\\b", "NOTNI"],
+    ["\u220C", "NOTNI"], // '∌'
 
-    ['notcontainselement\\b', 'NOTNI'],
-    ['\u220C', 'NOTNI'], // '∌'
+    ["subset\\b", "SUBSET"],
+    ["\u2282", "SUBSET"], // '⊂'
 
-    ['subset\\b', 'SUBSET'],
-    ['\u2282', 'SUBSET'], // '⊂'
+    ["notsubset\\b", "NOTSUBSET"],
+    ["\u2284", "NOTSUBSET"], // '⊄'
 
-    ['notsubset\\b', 'NOTSUBSET'],
-    ['\u2284', 'NOTSUBSET'], // '⊄'
+    ["superset\\b", "SUPERSET"],
+    ["\u2283", "SUPERSET"], // '⊃'
 
-    ['superset\\b', 'SUPERSET'],
-    ['\u2283', 'SUPERSET'], // '⊃'
+    ["notsuperset\\b", "NOTSUPERSET"],
+    ["\u2285", "NOTSUPERSET"], //'⊅'
 
-    ['notsuperset\\b', 'NOTSUPERSET'],
-    ['\u2285', 'NOTSUPERSET'], //'⊅'
+    ["union\\b", "UNION"],
+    ["\u222A", "UNION"], // '∪'
 
-    ['union\\b', 'UNION'],
-    ['\u222A', 'UNION'], // '∪'
+    ["intersect\\b", "INTERSECT"],
+    ["\u2229", "INTERSECT"], //'∩'
 
-    ['intersect\\b', 'INTERSECT'],
-    ['\u2229', 'INTERSECT'], //'∩'
-
-    ['!', '!'],
-    ['\'', '\''],
-    ['_', '_'],
-    ['\\.\\.\\.', 'LDOTS'],
-    ['[a-zA-Z∂][a-zA-Z∂0-9]*', 'VAR'],  // include ∂ in VAR
+    ["!", "!"],
+    ["'", "'"],
+    ["_", "_"],
+    ["\\.\\.\\.", "LDOTS"],
+    ["[a-zA-Z∂][a-zA-Z∂0-9]*", "VAR"] // include ∂ in VAR
   ];
-
 
   // defaults for parsers if not overridden by context
 
@@ -71039,54 +71037,134 @@
   const splitSymbolsDefault = true;
 
   // symbols that won't be split into a product of letters if splitSymbols==true
-  const unsplitSymbolsDefault = ['alpha', 'beta', 'gamma', 'Gamma', 'delta', 'Delta', 'epsilon', 'zeta', 'eta', 'theta', 'Theta', 'iota', 'kappa', 'lambda', 'Lambda', 'mu', 'nu', 'xi', 'Xi', 'pi', 'Pi', 'rho', 'sigma', 'Sigma', 'tau', 'Tau', 'upsilon', 'Upsilon', 'phi', 'Phi', 'chi', 'psi', 'Psi', 'omega', 'Omega'];
+  const unsplitSymbolsDefault = [
+    "alpha",
+    "beta",
+    "gamma",
+    "Gamma",
+    "delta",
+    "Delta",
+    "epsilon",
+    "zeta",
+    "eta",
+    "theta",
+    "Theta",
+    "iota",
+    "kappa",
+    "lambda",
+    "Lambda",
+    "mu",
+    "nu",
+    "xi",
+    "Xi",
+    "pi",
+    "Pi",
+    "rho",
+    "sigma",
+    "Sigma",
+    "tau",
+    "Tau",
+    "upsilon",
+    "Upsilon",
+    "phi",
+    "Phi",
+    "chi",
+    "psi",
+    "Psi",
+    "omega",
+    "Omega"
+  ];
 
   // Applied functions must be given an argument so that
   // they are applied to the argument
-  const appliedFunctionSymbolsDefault = ["abs", "exp", "log", "ln", "log10", "sign", "sqrt", "erf", "acos", "acosh", "acot", "acoth", "acsc", "acsch", "asec", "asech", "asin", "asinh", "atan", "atanh", "cos", "cosh", "cot", "coth", "csc", "csch", "sec", "sech", "sin", "sinh", "tan", "tanh", 'arcsin', 'arccos', 'arctan', 'arccsc', 'arcsec', 'arccot', 'cosec', 'arg', 'conj'];
+  const appliedFunctionSymbolsDefault = [
+    "abs",
+    "exp",
+    "log",
+    "ln",
+    "log10",
+    "sign",
+    "sqrt",
+    "erf",
+    "acos",
+    "acosh",
+    "acot",
+    "acoth",
+    "acsc",
+    "acsch",
+    "asec",
+    "asech",
+    "asin",
+    "asinh",
+    "atan",
+    "atanh",
+    "cos",
+    "cosh",
+    "cot",
+    "coth",
+    "csc",
+    "csch",
+    "sec",
+    "sech",
+    "sin",
+    "sinh",
+    "tan",
+    "tanh",
+    "arcsin",
+    "arccos",
+    "arctan",
+    "arccsc",
+    "arcsec",
+    "arccot",
+    "cosec",
+    "arg",
+    "conj"
+  ];
 
   // Functions could have an argument, in which case they are applied
   // or, if they don't have an argument in parentheses, then they are treated
   // like a variable, except that trailing ^ and ' have higher precedence
-  const functionSymbolsDefault = ['f', 'g'];
+  const functionSymbolsDefault = ["f", "g"];
 
   // Parse Leibniz notation
   const parseLeibnizNotationDefault = true;
 
+  const missingFactorDefaultBehavior = function(token, e) {
+    throw e;
+  };
+
+  const defaultOpts = {
+    allowSimplifiedFunctionApplication: allowSimplifiedFunctionApplicationDefault,
+    splitSymbols: splitSymbolsDefault,
+    unsplitSymbols: unsplitSymbolsDefault,
+    appliedFunctionSymbols: appliedFunctionSymbolsDefault,
+    functionSymbols: functionSymbolsDefault,
+    parseLeibnizNotation: parseLeibnizNotationDefault,
+    missingFactor: missingFactorDefaultBehavior
+  };
 
   class textToAst {
-    constructor({
-      allowSimplifiedFunctionApplication = allowSimplifiedFunctionApplicationDefault,
-      splitSymbols = splitSymbolsDefault,
-      unsplitSymbols = unsplitSymbolsDefault,
-      appliedFunctionSymbols = appliedFunctionSymbolsDefault,
-      functionSymbols = functionSymbolsDefault,
-      parseLeibnizNotation = parseLeibnizNotationDefault,
-    } = {}) {
-      this.allowSimplifiedFunctionApplication = allowSimplifiedFunctionApplication;
-      this.splitSymbols = splitSymbols;
-      this.unsplitSymbols = unsplitSymbols;
-      this.appliedFunctionSymbols = appliedFunctionSymbols;
-      this.functionSymbols = functionSymbols;
-      this.parseLeibnizNotation = parseLeibnizNotation;
-
+    constructor(opts) {
+      opts = Object.assign({}, defaultOpts, opts);
+      Object.keys(opts).forEach(k => (this[k] = opts[k]));
       this.lexer = new lexer(text_rules);
-
     }
 
     advance(params) {
       this.token = this.lexer.advance(params);
-      if (this.token.token_type === 'INVALID') {
-        throw new ParseError("Invalid symbol '" + this.token.original_text + "'",
-          this.lexer.location);
+      if (this.token.token_type === "INVALID") {
+        throw new ParseError(
+          "Invalid symbol '" + this.token.original_text + "'",
+          this.lexer.location
+        );
       }
     }
 
     return_state() {
-      return ({
+      return {
         lexer_state: this.lexer.return_state(),
         token: Object.assign({}, this.token)
-      });
+      };
     }
 
     set_state(state) {
@@ -71094,26 +71172,23 @@
       this.token = Object.assign({}, state.token);
     }
 
-
     convert(input) {
-
       this.lexer.set_input(input);
       this.advance();
 
       var result = this.statement_list();
 
-      if (this.token.token_type !== 'EOF') {
-        throw new ParseError("Invalid location of '" + this.token.original_text + "'",
-          this.lexer.location);
+      if (this.token.token_type !== "EOF") {
+        throw new ParseError(
+          "Invalid location of '" + this.token.original_text + "'",
+          this.lexer.location
+        );
       }
 
       return flatten$18(result);
-
     }
 
-
     statement_list() {
-
       var list = [this.statement()];
 
       while (this.token.token_type === ",") {
@@ -71121,43 +71196,37 @@
         list.push(this.statement());
       }
 
-      if (list.length > 1)
-        list = ['list'].concat(list);
-      else
-        list = list[0];
+      if (list.length > 1) list = ["list"].concat(list);
+      else list = list[0];
 
       return list;
     }
 
     statement({ inside_absolute_value = 0 } = {}) {
-
       // three periods ... can be a statement by itself
-      if (this.token.token_type === 'LDOTS') {
+      if (this.token.token_type === "LDOTS") {
         this.advance();
-        return ['ldots'];
+        return ["ldots"];
       }
 
       var original_state;
 
       try {
-
         original_state = this.return_state();
 
-        let lhs = this.statement_a({ inside_absolute_value: inside_absolute_value });
+        let lhs = this.statement_a({
+          inside_absolute_value: inside_absolute_value
+        });
 
-        if (this.token.token_type !== ':')
-          return lhs;
+        if (this.token.token_type !== ":") return lhs;
 
         this.advance();
 
         let rhs = this.statement_a();
 
-        return [':', lhs, rhs];
-
-      }
-      catch (e) {
+        return [":", lhs, rhs];
+      } catch (e) {
         try {
-
           // if ran into problem parsing statement
           // then try again with ignoring absolute value
           // and then interpreting bar as a binary operator
@@ -71167,32 +71236,28 @@
 
           let lhs = this.statement_a({ parse_absolute_value: false });
 
-          if (this.token.token_type !== '|') {
-            throw (e);
+          if (this.token.token_type !== "|") {
+            throw e;
           }
 
           this.advance();
 
           let rhs = this.statement_a({ parse_absolute_value: false });
 
-          return ['|', lhs, rhs];
-
-        }
-        catch (e2) {
-          throw (e);  // throw original error
+          return ["|", lhs, rhs];
+        } catch (e2) {
+          throw e; // throw original error
         }
       }
     }
 
     statement_a({ inside_absolute_value = 0, parse_absolute_value = true } = {}) {
-
       var lhs = this.statement_b({
         inside_absolute_value: inside_absolute_value,
         parse_absolute_value: parse_absolute_value
       });
 
-      while (this.token.token_type === 'OR') {
-
+      while (this.token.token_type === "OR") {
         let operation = this.token.token_type.toLowerCase();
 
         this.advance();
@@ -71213,8 +71278,7 @@
 
       var lhs = this.relation(params);
 
-      while (this.token.token_type === 'AND') {
-
+      while (this.token.token_type === "AND") {
         let operation = this.token.token_type.toLowerCase();
 
         this.advance();
@@ -71227,31 +71291,40 @@
       return lhs;
     }
 
-
     relation(params) {
-
-      if (this.token.token_type === 'NOT' || this.token.token_type === '!') {
+      if (this.token.token_type === "NOT" || this.token.token_type === "!") {
         this.advance();
-        return ['not', this.relation(params)];
+        return ["not", this.relation(params)];
       }
 
       var lhs = this.expression(params);
 
-      while ((this.token.token_type === '=') || (this.token.token_type === 'NE') ||
-        (this.token.token_type === '<') || (this.token.token_type === '>') ||
-        (this.token.token_type === 'LE') || (this.token.token_type === 'GE') ||
-        (this.token.token_type === 'IN') || (this.token.token_type === 'NOTIN') ||
-        (this.token.token_type === 'NI') || (this.token.token_type === 'NOTNI') ||
-        (this.token.token_type === 'SUBSET') || (this.token.token_type === 'NOTSUBSET') ||
-        (this.token.token_type === 'SUPERSET') || (this.token.token_type === 'NOTSUPERSET')) {
-
+      while (
+        this.token.token_type === "=" ||
+        this.token.token_type === "NE" ||
+        this.token.token_type === "<" ||
+        this.token.token_type === ">" ||
+        this.token.token_type === "LE" ||
+        this.token.token_type === "GE" ||
+        this.token.token_type === "IN" ||
+        this.token.token_type === "NOTIN" ||
+        this.token.token_type === "NI" ||
+        this.token.token_type === "NOTNI" ||
+        this.token.token_type === "SUBSET" ||
+        this.token.token_type === "NOTSUBSET" ||
+        this.token.token_type === "SUPERSET" ||
+        this.token.token_type === "NOTSUPERSET"
+      ) {
         let operation = this.token.token_type.toLowerCase();
 
         let inequality_sequence = 0;
 
-        if ((this.token.token_type === '<') || (this.token.token_type === 'LE')) {
+        if (this.token.token_type === "<" || this.token.token_type === "LE") {
           inequality_sequence = -1;
-        } else if ((this.token.token_type === '>') || (this.token.token_type === 'GE')) {
+        } else if (
+          this.token.token_type === ">" ||
+          this.token.token_type === "GE"
+        ) {
           inequality_sequence = 1;
         }
 
@@ -71259,78 +71332,70 @@
         let rhs = this.expression(params);
 
         if (inequality_sequence === -1) {
-          if ((this.token.token_type === '<') || this.token.token_type === 'LE') {
+          if (this.token.token_type === "<" || this.token.token_type === "LE") {
             // sequence of multiple < or <=
-            let strict = ['tuple'];
-            if (operation === '<')
-              strict.push(true);
-            else
-              strict.push(false);
+            let strict = ["tuple"];
+            if (operation === "<") strict.push(true);
+            else strict.push(false);
 
-            let args = ['tuple', lhs, rhs];
-            while ((this.token.token_type === '<') || this.token.token_type === 'LE') {
-              if (this.token.token_type === '<')
-                strict.push(true);
-              else
-                strict.push(false);
+            let args = ["tuple", lhs, rhs];
+            while (
+              this.token.token_type === "<" ||
+              this.token.token_type === "LE"
+            ) {
+              if (this.token.token_type === "<") strict.push(true);
+              else strict.push(false);
 
               this.advance();
               args.push(this.expression(params));
             }
-            lhs = ['lts', args, strict];
+            lhs = ["lts", args, strict];
           } else {
             lhs = [operation, lhs, rhs];
           }
-
         } else if (inequality_sequence === 1) {
-          if ((this.token.token_type === '>') || this.token.token_type === 'GE') {
+          if (this.token.token_type === ">" || this.token.token_type === "GE") {
             // sequence of multiple > or >=
-            let strict = ['tuple'];
-            if (operation === '>')
-              strict.push(true);
-            else
-              strict.push(false);
+            let strict = ["tuple"];
+            if (operation === ">") strict.push(true);
+            else strict.push(false);
 
-            let args = ['tuple', lhs, rhs];
-            while ((this.token.token_type === '>') || this.token.token_type === 'GE') {
-              if (this.token.token_type === '>')
-                strict.push(true);
-              else
-                strict.push(false);
+            let args = ["tuple", lhs, rhs];
+            while (
+              this.token.token_type === ">" ||
+              this.token.token_type === "GE"
+            ) {
+              if (this.token.token_type === ">") strict.push(true);
+              else strict.push(false);
 
               this.advance();
               args.push(this.expression(params));
             }
-            lhs = ['gts', args, strict];
+            lhs = ["gts", args, strict];
           } else {
             lhs = [operation, lhs, rhs];
           }
-
-        } else if (operation === '=') {
-          lhs = ['=', lhs, rhs];
+        } else if (operation === "=") {
+          lhs = ["=", lhs, rhs];
 
           // check for sequence of multiple =
-          while (this.token.token_type === '=') {
+          while (this.token.token_type === "=") {
             this.advance();
             lhs.push(this.expression(params));
           }
         } else {
-
           lhs = [operation, lhs, rhs];
         }
-
       }
 
       return lhs;
     }
 
-
     expression(params) {
-      if (this.token.token_type === '+')
-        this.advance();
+      if (this.token.token_type === "+") this.advance();
 
       let negative_begin = false;
-      if (this.token.token_type === '-') {
+      if (this.token.token_type === "-") {
         negative_begin = true;
         this.advance();
       }
@@ -71338,30 +71403,32 @@
       var lhs = this.term(params);
 
       if (negative_begin) {
-        lhs = ['-', lhs];
+        lhs = ["-", lhs];
       }
 
-      while ((this.token.token_type === '+') || (this.token.token_type === '-')
-        || (this.token.token_type === 'UNION') ||
-        (this.token.token_type === 'INTERSECT')) {
-
+      while (
+        this.token.token_type === "+" ||
+        this.token.token_type === "-" ||
+        this.token.token_type === "UNION" ||
+        this.token.token_type === "INTERSECT"
+      ) {
         let operation = this.token.token_type.toLowerCase();
         let negative = false;
 
-        if (this.token.token_type === '-') {
-          operation = '+';
+        if (this.token.token_type === "-") {
+          operation = "+";
           negative = true;
           this.advance();
         } else {
           this.advance();
-          if (operation === '+' && this.token.token_type === '-') {
+          if (operation === "+" && this.token.token_type === "-") {
             negative = true;
             this.advance();
           }
         }
         let rhs = this.term(params);
         if (negative) {
-          rhs = ['-', rhs];
+          rhs = ["-", rhs];
         }
 
         lhs = [operation, lhs, rhs];
@@ -71370,22 +71437,31 @@
       return lhs;
     }
 
-
     term(params) {
-      var lhs = this.factor(params);
+      var lhs;
+      try {
+        lhs = this.factor(params);
+      } catch (e) {
+        lhs = this.missingFactor(this.token, e);
+        lhs = Number.isFinite(lhs) ? lhs : 0;
+      }
 
       var keepGoing = false;
 
       do {
         keepGoing = false;
 
-        if (this.token.token_type === '*') {
+        if (this.token.token_type === "PERCENT") {
           this.advance();
-          lhs = ['*', lhs, this.factor(params)];
+          lhs = ["%", lhs];
           keepGoing = true;
-        } else if (this.token.token_type === '/') {
+        } else if (this.token.token_type === "*") {
           this.advance();
-          lhs = ['/', lhs, this.factor(params)];
+          lhs = ["*", lhs, this.factor(params)];
+          keepGoing = true;
+        } else if (this.token.token_type === "/") {
+          this.advance();
+          lhs = ["/", lhs, this.factor(params)];
           keepGoing = true;
         } else {
           // this is the one case where a | could indicate a closing absolute value
@@ -71393,7 +71469,7 @@
           params2.allow_absolute_value_closing = true;
           let rhs = this.nonMinusFactor(params2);
           if (rhs !== false) {
-            lhs = ['*', lhs, rhs];
+            lhs = ["*", lhs, rhs];
             keepGoing = true;
           }
         }
@@ -71402,12 +71478,10 @@
       return lhs;
     }
 
-
     factor(params) {
-
-      if (this.token.token_type === '-') {
+      if (this.token.token_type === "-") {
         this.advance();
-        return ['-', this.factor(params)];
+        return ["-", this.factor(params)];
       }
 
       var result = this.nonMinusFactor(params);
@@ -71416,34 +71490,35 @@
         if (this.token.token_type === "EOF") {
           throw new ParseError("Unexpected end of input", this.lexer.location);
         } else {
-          throw new ParseError("Invalid location of '" + this.token.original_text + "'",
-            this.lexer.location);
+          throw new ParseError(
+            "Invalid location of '" + this.token.original_text + "'",
+            this.lexer.location
+          );
         }
       } else {
         return result;
       }
-
     }
 
     nonMinusFactor(params) {
-
       var result = this.baseFactor(params);
 
       // allow arbitrary sequence of factorials
-      if (this.token.token_type === '!' || this.token.token_type === "'") {
+      if (this.token.token_type === "!" || this.token.token_type === "'") {
         if (result === false)
-          throw new ParseError("Invalid location of " + this.token.token_type,
-            this.lexer.location);
-        while (this.token.token_type === '!' || this.token.token_type === "'") {
-          if (this.token.token_type === '!')
-            result = ['apply', 'factorial', result];
-          else
-            result = ['prime', result];
+          throw new ParseError(
+            "Invalid location of " + this.token.token_type,
+            this.lexer.location
+          );
+        while (this.token.token_type === "!" || this.token.token_type === "'") {
+          if (this.token.token_type === "!")
+            result = ["apply", "factorial", result];
+          else result = ["prime", result];
           this.advance();
         }
       }
 
-      if (this.token.token_type === '^') {
+      if (this.token.token_type === "^") {
         if (result === false) {
           throw new ParseError("Invalid location of ^", this.lexer.location);
         }
@@ -71454,97 +71529,114 @@
         delete params2.allow_absolute_value_closing;
         delete params2.inside_absolute_value;
 
-        return ['^', result, this.factor(params2)];
+        return ["^", result, this.factor(params2)];
       }
 
       return result;
     }
 
-
-    baseFactor({ inside_absolute_value = 0,
+    baseFactor({
+      inside_absolute_value = 0,
       parse_absolute_value = true,
       allow_absolute_value_closing = false
     } = {}) {
-
       var result = false;
 
-      if (this.token.token_type === 'NUMBER') {
+      if (this.token.token_type === "NUMBER") {
         result = parseFloat(this.token.token_text);
         this.advance();
-      } else if (this.token.token_type === 'INFINITY') {
+      } else if (this.token.token_type === "INFINITY") {
         result = Infinity;
         this.advance();
-      } else if (this.token.token_type === 'VAR' || this.token.token_type === 'VARMULTICHAR') {
+      } else if (
+        this.token.token_type === "VAR" ||
+        this.token.token_type === "VARMULTICHAR"
+      ) {
         result = this.token.token_text;
 
-        if (this.appliedFunctionSymbols.includes(result) ||
-          this.functionSymbols.includes(result)) {
+        if (
+          this.appliedFunctionSymbols.includes(result) ||
+          this.functionSymbols.includes(result)
+        ) {
           let must_apply = false;
-          if (this.appliedFunctionSymbols.includes(result))
-            must_apply = true;
+          if (this.appliedFunctionSymbols.includes(result)) must_apply = true;
 
           this.advance();
 
-          if (this.token.token_type === '_') {
+          if (this.token.token_type === "_") {
             this.advance();
-            let subresult = this.baseFactor({ parse_absolute_value: parse_absolute_value });
+            let subresult = this.baseFactor({
+              parse_absolute_value: parse_absolute_value
+            });
 
             // since baseFactor could return false, must check
             if (subresult === false) {
               if (this.token.token_type === "EOF") {
-                throw new ParseError("Unexpected end of input",
-                  this.lexer.location);
+                throw new ParseError(
+                  "Unexpected end of input",
+                  this.lexer.location
+                );
               } else {
-                throw new ParseError("Invalid location of '" + this.token.original_text +
-                  "'", this.lexer.location);
+                throw new ParseError(
+                  "Invalid location of '" + this.token.original_text + "'",
+                  this.lexer.location
+                );
               }
             }
-            result = ['_', result, subresult];
+            result = ["_", result, subresult];
           }
 
           while (this.token.token_type === "'") {
-            result = ['prime', result];
+            result = ["prime", result];
             this.advance();
           }
 
-          if (this.token.token_type === '^') {
+          if (this.token.token_type === "^") {
             this.advance();
-            result = ['^', result, this.factor({ parse_absolute_value: parse_absolute_value })];
+            result = [
+              "^",
+              result,
+              this.factor({ parse_absolute_value: parse_absolute_value })
+            ];
           }
 
-          if (this.token.token_type === '(') {
+          if (this.token.token_type === "(") {
             this.advance();
             let parameters = this.statement_list();
 
-            if (this.token.token_type !== ')') {
-              throw new ParseError('Expecting )', this.lexer.location);
+            if (this.token.token_type !== ")") {
+              throw new ParseError("Expecting )", this.lexer.location);
             }
             this.advance();
 
-            if (parameters[0] === 'list') {
+            if (parameters[0] === "list") {
               // rename from list to tuple
-              parameters[0] = 'tuple';
+              parameters[0] = "tuple";
             }
 
-            result = ['apply', result, parameters];
+            result = ["apply", result, parameters];
           } else {
             // if was an applied function symbol,
             // cannot omit argument
             if (must_apply) {
               if (!this.allowSimplifiedFunctionApplication)
-                throw new ParseError("Expecting ( after function",
-                  this.lexer.location);
+                throw new ParseError(
+                  "Expecting ( after function",
+                  this.lexer.location
+                );
 
               // if allow simplied function application
               // let the argument be the next factor
-              result = ['apply', result, this.factor({ parse_absolute_value: parse_absolute_value })];
+              result = [
+                "apply",
+                result,
+                this.factor({ parse_absolute_value: parse_absolute_value })
+              ];
             }
           }
         } else {
-
           // determine if may be a derivative in Leibniz notation
           if (this.parseLeibnizNotation) {
-
             let original_state = this.return_state();
 
             let r = this.leibniz_notation();
@@ -71552,8 +71644,7 @@
             if (r) {
               // successfully parsed derivative in Leibniz notation, so return
               return r;
-            }
-            else {
+            } else {
               // didn't find a properly format Leibniz notation
               // so reset state and continue
               this.set_state(original_state);
@@ -71564,9 +71655,11 @@
           let split = this.splitSymbols;
 
           if (split) {
-            if (this.token.token_type === 'VARMULTICHAR' ||
+            if (
+              this.token.token_type === "VARMULTICHAR" ||
               this.unsplitSymbols.includes(result) ||
-              result.length === 1) {
+              result.length === 1
+            ) {
               split = false;
             } else if (result.match(/[\d]/g)) {
               // don't split if has a number in it
@@ -71595,18 +71688,21 @@
             this.advance();
           }
         }
-      } else if (this.token.token_type === '(' || this.token.token_type === '[' ||
-        this.token.token_type === '{') {
+      } else if (
+        this.token.token_type === "(" ||
+        this.token.token_type === "[" ||
+        this.token.token_type === "{"
+      ) {
         let token_left = this.token.token_type;
         let expected_right, other_right;
-        if (this.token.token_type === '(') {
-          expected_right = ')';
-          other_right = ']';
-        } else if (this.token.token_type === '[') {
-          expected_right = ']';
-          other_right = ')';
+        if (this.token.token_type === "(") {
+          expected_right = ")";
+          other_right = "]";
+        } else if (this.token.token_type === "[") {
+          expected_right = "]";
+          other_right = ")";
         } else {
-          expected_right = '}';
+          expected_right = "}";
           other_right = null;
         }
 
@@ -71620,44 +71716,43 @@
 
         if (this.token.token_type !== expected_right) {
           if (n_elements !== 2 || other_right === null) {
-            throw new ParseError('Expecting ' + expected_right,
-              this.lexer.location);
+            throw new ParseError(
+              "Expecting " + expected_right,
+              this.lexer.location
+            );
           } else if (this.token.token_type !== other_right) {
-            throw new ParseError('Expecting ) or ]', this.lexer.location);
+            throw new ParseError("Expecting ) or ]", this.lexer.location);
           }
 
           // half-open interval
-          result[0] = 'tuple';
-          result = ['interval', result];
+          result[0] = "tuple";
+          result = ["interval", result];
           let closed;
-          if (token_left === '(')
-            closed = ['tuple', false, true];
-          else
-            closed = ['tuple', true, false];
+          if (token_left === "(") closed = ["tuple", false, true];
+          else closed = ["tuple", true, false];
           result.push(closed);
-
         } else if (n_elements >= 2) {
-          if (token_left === '(') {
-            result[0] = 'tuple';
-          } else if (token_left === '[') {
-            result[0] = 'array';
+          if (token_left === "(") {
+            result[0] = "tuple";
+          } else if (token_left === "[") {
+            result[0] = "array";
           } else {
-            result[0] = 'set';
+            result[0] = "set";
           }
-        } else if (token_left === '{') {
-          if (result[0] === '|' || result[0] === ':') {
-            result = ['set', result];  // set builder notation
-          }
-          else {
-            result = ['set', result]; // singleton set
+        } else if (token_left === "{") {
+          if (result[0] === "|" || result[0] === ":") {
+            result = ["set", result]; // set builder notation
+          } else {
+            result = ["set", result]; // singleton set
           }
         }
 
         this.advance();
-
-      } else if (this.token.token_type === '|' && parse_absolute_value &&
-        (inside_absolute_value === 0 || !allow_absolute_value_closing)) {
-
+      } else if (
+        this.token.token_type === "|" &&
+        parse_absolute_value &&
+        (inside_absolute_value === 0 || !allow_absolute_value_closing)
+      ) {
         // allow the opening of an absolute value here if either
         // - we aren't already inside an absolute value (inside_absolute_value==0), or
         // - we don't allows an absolute value closing
@@ -71669,36 +71764,39 @@
         this.advance();
 
         result = this.statement({ inside_absolute_value: inside_absolute_value });
-        result = ['apply', 'abs', result];
+        result = ["apply", "abs", result];
 
-        if (this.token.token_type !== '|') {
-          throw new ParseError('Expecting |', this.lexer.location);
+        if (this.token.token_type !== "|") {
+          throw new ParseError("Expecting |", this.lexer.location);
         }
 
         this.advance();
       }
 
-      if (this.token.token_type === '_') {
+      if (this.token.token_type === "_") {
         if (result === false) {
           throw new ParseError("Invalid location of _", this.lexer.location);
         }
         this.advance();
-        let subresult = this.baseFactor({ parse_absolute_value: parse_absolute_value });
+        let subresult = this.baseFactor({
+          parse_absolute_value: parse_absolute_value
+        });
 
         if (subresult === false) {
           if (this.token.token_type === "EOF") {
             throw new ParseError("Unexpected end of input", this.lexer.location);
           } else {
-            throw new ParseError("Invalid location of '" + this.token.original_text + "'",
-              this.lexer.location);
+            throw new ParseError(
+              "Invalid location of '" + this.token.original_text + "'",
+              this.lexer.location
+            );
           }
         }
-        return ['_', result, subresult];
+        return ["_", result, subresult];
       }
 
       return result;
     }
-
 
     leibniz_notation() {
       // attempt to find and return a derivative in Leibniz notation
@@ -71706,8 +71804,14 @@
 
       var result = this.token.token_text;
 
-      if (!(this.token.token_type === 'VAR' && (result[0] === "d" || result[0] === "∂")
-        && (result.length === 1 || (result.length === 2 && /[a-zA-Z]/.exec(result[1]))))) {
+      if (
+        !(
+          this.token.token_type === "VAR" &&
+          (result[0] === "d" || result[0] === "∂") &&
+          (result.length === 1 ||
+            (result.length === 2 && /[a-zA-Z]/.exec(result[1])))
+        )
+      ) {
         return false;
       }
 
@@ -71723,22 +71827,22 @@
       let var2s = [];
       let var2_exponents = [];
 
-      if (result.length === 2)
-        var1 = result[1];
-      else { // result is length 1
+      if (result.length === 2) var1 = result[1];
+      else {
+        // result is length 1
 
         // since have just a d or ∂
         // must be followed by a ^ or a VARMULTICHAR/VAR with no ∂
         this.advance();
-        if (this.token.token_type === 'VARMULTICHAR' ||
-          (this.token.token_type === 'VAR' && !this.token.token_text.includes('∂'))
+        if (
+          this.token.token_type === "VARMULTICHAR" ||
+          (this.token.token_type === "VAR" &&
+            !this.token.token_text.includes("∂"))
         ) {
           var1 = this.token.token_text;
-        }
-
-        else {
+        } else {
           // since not VARMULTICHAR, must be a ^ next
-          if (this.token.token_type !== '^') {
+          if (this.token.token_type !== "^") {
             return false;
           }
 
@@ -71746,7 +71850,7 @@
           // must be followed by an integer
           this.advance();
 
-          if (this.token.token_type !== 'NUMBER') {
+          if (this.token.token_type !== "NUMBER") {
             return false;
           }
 
@@ -71760,11 +71864,13 @@
 
           // either a VAR with no ∂
           // or a VARMULTICHAR
-          if ((this.token.token_type === 'VAR' && !this.token.token_text.includes('∂'))
-            || this.token.token_type === 'VARMULTICHAR') {
+          if (
+            (this.token.token_type === "VAR" &&
+              !this.token.token_text.includes("∂")) ||
+            this.token.token_type === "VARMULTICHAR"
+          ) {
             var1 = this.token.token_text;
-          }
-          else {
+          } else {
             return false;
           }
         }
@@ -71774,8 +71880,7 @@
 
       this.advance(); // allow a space this time
 
-      if (this.token.token_type !== '/')
-        return false;
+      if (this.token.token_type !== "/") return false;
 
       // find sequence of
       // derivative symbol followed by a single character or VARMULTICHAR (with no space)
@@ -71788,14 +71893,16 @@
       this.advance(); // allow space just after the /
 
       while (true) {
-
         // next must either be
         // - a VAR whose first character matches derivative symbol
         //   and whose second character is a letter, or
         // - a single character VAR that matches derivative symbol
         //   which must be followed by a VARMULTICHAR/VAR with no ∂
 
-        if (this.token.token_type !== 'VAR' || this.token.token_text[0] !== deriv_symbol) {
+        if (
+          this.token.token_type !== "VAR" ||
+          this.token.token_text[0] !== deriv_symbol
+        ) {
           return false;
         }
 
@@ -71805,24 +71912,27 @@
 
           // keep just two character token
           this.token.token_text = this.token.token_text.slice(0, 2);
-
         }
 
         let token_text = this.token.token_text;
 
         // derivative symbol and variable together
         if (token_text.length === 2) {
-          if (/[a-zA-Z]/.exec(token_text[1]))
-            var2s.push(token_text[1]);
+          if (/[a-zA-Z]/.exec(token_text[1])) var2s.push(token_text[1]);
           else {
             return false;
           }
-        }
-        else { // token text was just the derivative symbol
+        } else {
+          // token text was just the derivative symbol
           this.advance();
 
-          if (!((this.token.token_type === 'VAR' && !this.token.token_text.includes('∂'))
-            || this.token.token_type === 'VARMULTICHAR')) {
+          if (
+            !(
+              (this.token.token_type === "VAR" &&
+                !this.token.token_text.includes("∂")) ||
+              this.token.token_type === "VARMULTICHAR"
+            )
+          ) {
             return false;
           }
           var2s.push(this.token.token_text);
@@ -71841,11 +71951,10 @@
           this.advance();
         }
 
-        if (this.token.token_type === '^') {
-
+        if (this.token.token_type === "^") {
           this.advance();
 
-          if (this.token.token_type !== 'NUMBER') {
+          if (this.token.token_type !== "NUMBER") {
             return false;
           }
 
@@ -71862,7 +71971,6 @@
             lastWasSpace = true;
             this.advance();
           }
-
         }
         var2_exponents.push(this_exponent);
         exponent_sum += this_exponent;
@@ -71873,36 +71981,33 @@
 
         // possibly found derivative
         if (exponent_sum === n_deriv) {
-
           // check to make sure next token isn't another VAR or VARMULTICHAR
           // in this case, the derivative isn't separated from what follows
-          if (!lastWasSpace && (this.token.token_type === "VAR" || this.token.token_type === "VARMULTICHAR")) {
+          if (
+            !lastWasSpace &&
+            (this.token.token_type === "VAR" ||
+              this.token.token_type === "VARMULTICHAR")
+          ) {
             return false;
           }
 
           // found derivative!
 
           // if last token was a space advance to next non-space token
-          if (this.token.token_type === "SPACE")
-            this.advance();
+          if (this.token.token_type === "SPACE") this.advance();
 
           let result_name = "derivative_leibniz";
-          if (deriv_symbol === "∂")
-            result_name = "partial_" + result_name;
+          if (deriv_symbol === "∂") result_name = "partial_" + result_name;
 
           result = [result_name];
 
-          if (n_deriv === 1)
-            result.push(var1);
-          else
-            result.push(["tuple", var1, n_deriv]);
+          if (n_deriv === 1) result.push(var1);
+          else result.push(["tuple", var1, n_deriv]);
 
           let r2 = [];
           for (let i = 0; i < var2s.length; i += 1) {
-            if (var2_exponents[i] === 1)
-              r2.push(var2s[i]);
-            else
-              r2.push(["tuple", var2s[i], var2_exponents[i]]);
+            if (var2_exponents[i] === 1) r2.push(var2s[i]);
+            else r2.push(["tuple", var2s[i], var2_exponents[i]]);
           }
           r2 = ["tuple"].concat(r2);
 
@@ -79688,6 +79793,7 @@
     ["\\*", "*"],
     ["\\/", "/"],
     ["%", "PERCENT"],
+    ["\\\\%", "PERCENT"],
     ["-", "-"],
     ["\\+", "+"],
     ["\\^", "^"],
@@ -79924,31 +80030,24 @@
   // Parse Leibniz notation
   const parseLeibnizNotationDefault$1 = true;
 
-  const missingFactorDefaultBehavior = function(token, e) {
+  const missingFactorDefaultBehavior$1 = function(token, e) {
     throw e;
   };
 
-  const defaultOpts = {
+  const defaultOpts$1 = {
     allowSimplifiedFunctionApplication: allowSimplifiedFunctionApplicationDefault$1,
     allowedLatexSymbols: allowedLatexSymbolsDefault$1,
     appliedFunctionSymbols: appliedFunctionSymbolsDefault$1,
     functionSymbols: functionSymbolsDefault$1,
     parseLeibnizNotation: parseLeibnizNotationDefault$1,
-    missingFactor: missingFactorDefaultBehavior,
+    missingFactor: missingFactorDefaultBehavior$1,
     unknownCommandBehavior: "error"
   };
 
   class latexToAst {
     constructor(opts) {
-      opts = Object.assign({}, defaultOpts, opts);
-      this.allowSimplifiedFunctionApplication =
-        opts.allowSimplifiedFunctionApplication;
-      this.allowedLatexSymbols = opts.allowedLatexSymbols;
-      this.appliedFunctionSymbols = opts.appliedFunctionSymbols;
-      this.functionSymbols = opts.functionSymbols;
-      this.parseLeibnizNotation = opts.parseLeibnizNotation;
-      this.missingFactor = opts.missingFactor;
-      this.unknownCommandBehavior = opts.unknownCommandBehavior;
+      opts = Object.assign({}, defaultOpts$1, opts);
+      Object.keys(opts).forEach(k => (this[k] = opts[k]));
 
       if (
         this.unknownCommandBehavior !== "error" &&
@@ -80280,8 +80379,7 @@
           this.advance();
           lhs = ["%", lhs];
           keepGoing = true;
-        }
-        if (this.token.token_type === "*") {
+        } else if (this.token.token_type === "*") {
           this.advance();
           lhs = ["*", lhs, this.factor(params)];
           keepGoing = true;
