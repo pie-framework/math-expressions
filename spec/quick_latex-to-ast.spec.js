@@ -578,6 +578,35 @@ test("parse Leibniz notation", function() {
   ]);
 });
 
+describe("mixed numbers", () => {
+
+  const checks = {
+    '1\\frac{1}{2}': ['+', 1, ['/', 1, 2]] ,
+    '1 \\frac{1}{2}': ['+', 1, ['/', 1, 2]],
+    '1     \\frac{1}{2}': ['+', 1, ['/', 1, 2]] ,
+    '10\\frac{1}{2}': ['+', 10, ['/', 1, 2]] ,
+    'x\\frac{1}{2}': ['*', 'x', ['/', 1, 2]] ,
+    '2\\frac{1}{2}': ['+', 2, ['/', 1, 2]] ,
+    '2\\frac{2}{1} \\frac{3}{1}': ['*', ['+', 2, ['/',  2, 1]], ['/', 3, 1]] ,
+    'a * 10     \\frac{1}{2}': ['*' , 'a', ['+', 10, ['/', 1, 2]]] ,
+    '10 2 \\frac{2}{1}' : ['*', 10, ['+', 2, ['/', 2,1]]],
+    '-2' : ['-', 2],
+    '-2\\frac{1}{2}' : ['-', ['+', 2, ['/', 1,2]]],
+    '- 2\\frac{1}{2}' : ['-', ['+', 2, ['/', 1,2]]],
+    '3 - 2\\frac{1}{2}' : ['+', 3, ['-', ['+', 2, ['/', 1,2]]]],
+    '2\\frac{1+2}{4+4}' : ['+', 2, ['/', ['+', 1, 2],['+', 4,4]]]
+  }
+
+  Object.keys(checks).forEach(k => {
+
+    test( `${k} => ${JSON.stringify(checks[k])}`, () => {
+      let converter = new latexToAst({});
+      const result = converter.convert(k); //"1 \\frac{1}{2}");
+      expect(result).toEqual(checks[k]);
+    });
+  });
+});
+
 test("conditional probability", function() {
   let converter = new latexToAst({ functionSymbols: ["P"] });
 
