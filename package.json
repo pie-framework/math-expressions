@@ -1,7 +1,7 @@
 {
   "name": "@pie-framework/math-expressions",
   "description": "Perform basic equality testing and symbolic computations on mathematical expressions involving transcendental functions",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "publishConfig": {
     "access": "public"
   },
