@@ -975,35 +975,6 @@ function lazy(object, prop, valueResolver) {
   });
 }
 /**
- * Traverse a path into an object.
- * When a namespace is missing, it will be created
- * @param {Object} object
- * @param {string | string[]} path   A dot separated string like 'name.space'
- * @return {Object} Returns the object at the end of the path
- */
-
-function traverse(object, path) {
-  if (path && typeof path === 'string') {
-    return traverse(object, path.split('.'));
-  }
-
-  var obj = object;
-
-  if (path) {
-    for (var i = 0; i < path.length; i++) {
-      var key = path[i];
-
-      if (!(key in obj)) {
-        obj[key] = {};
-      }
-
-      obj = obj[key];
-    }
-  }
-
-  return obj;
-}
-/**
  * A safe hasOwnProperty
  * @param {Object} object
  * @param {string} property
@@ -1147,19 +1118,6 @@ function contains(array, item) {
   return array.indexOf(item) !== -1;
 }
 /**
- * Find a string in an array. Case insensitive search
- * @param {Array.<string>} array
- * @param {string} item
- * @return {number} Returns the index when found. Returns -1 when not found
- */
-
-
-function findIndex(array, item) {
-  return array.map(function (i) {
-    return i.toLowerCase();
-  }).indexOf(item.toLowerCase());
-}
-/**
  * Validate an option
  * @param {Object} options         Object with options
  * @param {string} name            Name of the option to validate
@@ -1169,17 +1127,10 @@ function findIndex(array, item) {
 
 function validateOption(options, name, values$$1) {
   if (options[name] !== undefined && !contains(values$$1, options[name])) {
-    var index = findIndex(values$$1, options[name]);
-
-    if (index !== -1) {
-      // right value, wrong casing
-      // TODO: lower case values are deprecated since v3, remove this warning some day.
-      console.warn('Warning: Wrong casing for configuration option "' + name + '", should be "' + values$$1[index] + '" instead of "' + options[name] + '".');
-      options[name] = values$$1[index]; // change the option to the right casing
-    } else {
-      // unknown value
-      console.warn('Warning: Unknown value "' + options[name] + '" for configuration option "' + name + '". Available options: ' + values$$1.map(JSON.stringify).join(', ') + '.');
-    }
+    // unknown value
+    console.warn('Warning: Unknown value "' + options[name] + '" for configuration option "' + name + '". ' + 'Available options: ' + values$$1.map(function (value) {
+      return JSON.stringify(value);
+    }).join(', ') + '.');
   }
 }
 
@@ -2805,27 +2756,7 @@ function format(value, options) {
       return toEngineering(value, precision);
 
     case 'auto':
-      // TODO: clean up some day. Deprecated since: 2018-01-24
-      // @deprecated upper and lower are replaced with upperExp and lowerExp since v4.0.0
-      if (options && options.exponential && (options.exponential.lower !== undefined || options.exponential.upper !== undefined)) {
-        var fixedOptions = mapObject(options, function (x) {
-          return x;
-        });
-        fixedOptions.exponential = undefined;
-
-        if (options.exponential.lower !== undefined) {
-          fixedOptions.lowerExp = Math.round(Math.log(options.exponential.lower) / Math.LN10);
-        }
-
-        if (options.exponential.upper !== undefined) {
-          fixedOptions.upperExp = Math.round(Math.log(options.exponential.upper) / Math.LN10);
-        }
-
-        console.warn('Deprecation warning: Formatting options exponential.lower and exponential.upper ' + '(minimum and maximum value) ' + 'are replaced with exponential.lowerExp and exponential.upperExp ' + '(minimum and maximum exponent) since version 4.0.0. ' + 'Replace ' + JSON.stringify(options) + ' with ' + JSON.stringify(fixedOptions));
-        return toPrecision(value, precision, fixedOptions);
-      } // remove trailing zeros after the decimal point
-
-
+      // remove trailing zeros after the decimal point
       return toPrecision(value, precision, options && options).replace(/((\.\d*?)(0+))($|e)/, function () {
         var digits = arguments[2];
         var e = arguments[4];
@@ -3281,7 +3212,6 @@ var tanh = Math.tanh || function (x) {
  * @param {Object | Function | number} [options]
  * @return {string} str The formatted value
  */
-
 function format$1(value, options) {
   if (typeof options === 'function') {
     // handle format(value, fn)
@@ -3324,28 +3254,8 @@ function format$1(value, options) {
 
     case 'auto':
       {
-        // TODO: clean up some day. Deprecated since: 2018-01-24
-        // @deprecated upper and lower are replaced with upperExp and lowerExp since v4.0.0
-        if (options && options.exponential && (options.exponential.lower !== undefined || options.exponential.upper !== undefined)) {
-          var fixedOptions = mapObject(options, function (x) {
-            return x;
-          });
-          fixedOptions.exponential = undefined;
-
-          if (options.exponential.lower !== undefined) {
-            fixedOptions.lowerExp = Math.round(Math.log(options.exponential.lower) / Math.LN10);
-          }
-
-          if (options.exponential.upper !== undefined) {
-            fixedOptions.upperExp = Math.round(Math.log(options.exponential.upper) / Math.LN10);
-          }
-
-          console.warn('Deprecation warning: Formatting options exponential.lower and exponential.upper ' + '(minimum and maximum value) ' + 'are replaced with exponential.lowerExp and exponential.upperExp ' + '(minimum and maximum exponent) since version 4.0.0. ' + 'Replace ' + JSON.stringify(options) + ' with ' + JSON.stringify(fixedOptions));
-          return format$1(value, fixedOptions);
-        } // determine lower and upper bound for exponential notation.
+        // determine lower and upper bound for exponential notation.
         // TODO: implement support for upper and lower to be BigNumbers themselves
-
-
         var lowerExp = options && options.lowerExp !== undefined ? options.lowerExp : -3;
         var upperExp = options && options.upperExp !== undefined ? options.upperExp : 5; // handle special case zero
 
@@ -4260,22 +4170,6 @@ function getArrayDataType(array, typeOf$$1) {
   }
 
   return type;
-}
-/**
- * Return the last item from an array
- * @param array
- * @returns {*}
- */
-
-function last(array) {
-  return array[array.length - 1];
-}
-/**
- * Get all but the last element of array.
- */
-
-function initial(array) {
-  return array.slice(0, array.length - 1);
 }
 /**
  * Test whether an array or string contains an item
@@ -12573,18 +12467,6 @@ var createMatrixClass = /* #__PURE__ */factory(name$5, dependencies$6, function 
   Matrix.prototype.type = 'Matrix';
   Matrix.prototype.isMatrix = true;
   /**
-   * Get the Matrix storage constructor for the given format.
-   *
-   * @param {string} format       The Matrix storage format.
-   *
-   * @return {Function}           The Matrix storage constructor.
-   */
-
-  Matrix.storage = function (format) {
-    // TODO: deprecated since v6.0.0. Clean up some day
-    throw new Error('Matrix.storage is deprecated since v6.0.0. ' + 'Use the factory function math.matrix instead.');
-  };
-  /**
    * Get the storage format used by the matrix.
    *
    * Usage:
@@ -12592,7 +12474,6 @@ var createMatrixClass = /* #__PURE__ */factory(name$5, dependencies$6, function 
    *
    * @return {string}           The storage format.
    */
-
 
   Matrix.prototype.storage = function () {
     // must be implemented by each of the Matrix implementations
@@ -14882,28 +14763,6 @@ var createIsNaN = /* #__PURE__ */factory(name$14, dependencies$15, function (_re
   });
 });
 
-/**
- * Log a console.warn message only once
- */
-var warnOnce = function () {
-  var messages = {};
-  return function warnOnce() {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    var message = args.join(', ');
-
-    if (!messages[message]) {
-      var _console;
-
-      messages[message] = true;
-
-      (_console = console).warn.apply(_console, ['Warning:'].concat(args));
-    }
-  };
-}();
-
 var name$15 = 'typeOf';
 var dependencies$16 = ['typed'];
 var createTypeOf = /* #__PURE__ */factory(name$15, dependencies$16, function (_ref) {
@@ -14970,18 +14829,6 @@ var createTypeOf = /* #__PURE__ */factory(name$15, dependencies$16, function (_r
   return typed(name$15, {
     any: typeOf
   });
-}); // For backward compatibility, deprecated since version 6.0.0. Date: 2018-11-06
-
-var createDeprecatedTypeof = /* #__PURE__ */factory('typeof', [], function () {
-  return function () {
-    warnOnce('Function "typeof" has been renamed to "typeOf" in v6.0.0, please use the new function instead.');
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    return typeOf.apply(typeOf, args);
-  };
 });
 
 /**
@@ -16677,7 +16524,16 @@ var createNumber = /* #__PURE__ */factory(name$18, dependencies$19, function (_r
     'Array | Matrix': function ArrayMatrix(x) {
       return deepMap(x, number);
     }
-  });
+  }); // reviver function to parse a JSON object like:
+  //
+  //     {"mathjs":"number","value":"2.3"}
+  //
+  // into a number 2.3
+
+  number.fromJSON = function (json) {
+    return parseFloat(json.value);
+  };
+
   return number;
 });
 
@@ -19792,13 +19648,14 @@ var createMultiplyScalar = /* #__PURE__ */factory(name$54, dependencies$55, func
 });
 
 var name$55 = 'multiply';
-var dependencies$56 = ['typed', 'matrix', 'addScalar', 'multiplyScalar', 'equalScalar'];
+var dependencies$56 = ['typed', 'matrix', 'addScalar', 'multiplyScalar', 'equalScalar', 'dot'];
 var createMultiply = /* #__PURE__ */factory(name$55, dependencies$56, function (_ref) {
   var typed = _ref.typed,
       matrix = _ref.matrix,
       addScalar = _ref.addScalar,
       multiplyScalar = _ref.multiplyScalar,
-      equalScalar = _ref.equalScalar;
+      equalScalar = _ref.equalScalar,
+      dot = _ref.dot;
   var algorithm11 = createAlgorithm11({
     typed: typed,
     equalScalar: equalScalar
@@ -19994,38 +19851,9 @@ var createMultiply = /* #__PURE__ */factory(name$55, dependencies$56, function (
     // check empty vector
     if (n === 0) {
       throw new Error('Cannot multiply two empty vectors');
-    } // a dense
-
-
-    var adata = a._data;
-    var adt = a._datatype; // b dense
-
-    var bdata = b._data;
-    var bdt = b._datatype; // datatype
-
-    var dt; // addScalar signature to use
-
-    var af = addScalar; // multiplyScalar signature to use
-
-    var mf = multiplyScalar; // process data types
-
-    if (adt && bdt && adt === bdt && typeof adt === 'string') {
-      // datatype
-      dt = adt; // find signatures that matches (dt, dt)
-
-      af = typed.find(addScalar, [dt, dt]);
-      mf = typed.find(multiplyScalar, [dt, dt]);
-    } // result (do not initialize it with zero)
-
-
-    var c = mf(adata[0], bdata[0]); // loop data
-
-    for (var i = 1; i < n; i++) {
-      // multiply and accumulate
-      c = af(c, mf(adata[i], bdata[i]));
     }
 
-    return c;
+    return dot(a, b);
   }
   /**
    * C = A * B
@@ -23406,13 +23234,6 @@ var createDiag = /* #__PURE__ */factory(name$79, dependencies$80, function (_ref
   }
 });
 
-// TODO: function eye is removed since v5.0.0 (June 2018). Remove it some day.
-var createEye = /* #__PURE__ */factory('eye', [], function () {
-  return function eye() {
-    throw new Error('Function "eye" is renamed to "identity" since mathjs version 5.0.0. ' + 'To keep eye working, create an alias for it using "math.import({eye: math.identity}, {override: true})"');
-  };
-});
-
 function _typeof$4(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof$4 = function _typeof(obj) { return typeof obj; }; } else { _typeof$4 = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof$4(obj); }
 
 // function utils
@@ -26518,7 +26339,7 @@ var createRound = /* #__PURE__ */factory(name$108, dependencies$109, function (_
    * @return {number | BigNumber | Fraction | Complex | Array | Matrix} Rounded value
    */
 
-  var round = typed(name$108, _objectSpread({}, roundNumberSignatures, {
+  var round = typed(name$108, _objectSpread(_objectSpread({}, roundNumberSignatures), {}, {
     Complex: function Complex(x) {
       return x.round();
     },
@@ -26816,8 +26637,8 @@ var createNthRoots = /* #__PURE__ */factory(name$111, dependencies$112, function
    *
    *    nthRoot, pow, sqrt
    *
-   * @param {number | BigNumber | Fraction | Complex | Array | Matrix} x Number to be rounded
-   * @return {number | BigNumber | Fraction | Complex | Array | Matrix}            Rounded value
+   * @param {number | BigNumber | Fraction | Complex} x Number to be rounded
+   * @return {number | BigNumber | Fraction | Complex}            Rounded value
    */
   var nthRoots = typed(name$111, {
     Complex: function Complex(x) {
@@ -31459,6 +31280,12 @@ function hasher(args) {
 function _typeof$6(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof$6 = function _typeof(obj) { return typeof obj; }; } else { _typeof$6 = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof$6(obj); }
 
 function _extends$1() { _extends$1 = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends$1.apply(this, arguments); }
+
+function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty$1(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty$1(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 var name$140 = 'Unit';
 var dependencies$141 = ['?on', 'config', 'addScalar', 'subtract', 'multiplyScalar', 'divideScalar', 'pow', 'abs', 'fix', 'round', 'equal', 'isNumeric', 'format', 'number', 'Complex', 'BigNumber', 'Fraction'];
 var createUnitClass = /* #__PURE__ */factory(name$140, dependencies$141, function (_ref) {
@@ -32139,12 +31966,8 @@ var createUnitClass = /* #__PURE__ */factory(name$140, dependencies$141, functio
 
 
     for (var _i = 0; _i < other.units.length; _i++) {
-      // Make a deep copy
-      var inverted = {};
-
-      for (var key in other.units[_i]) {
-        inverted[key] = other.units[_i][key];
-      }
+      // Make a shallow copy of every unit
+      var inverted = _objectSpread$1({}, other.units[_i]);
 
       res.units.push(inverted);
     } // If at least one operand has a value, then the result should also have a value
@@ -32179,14 +32002,11 @@ var createUnitClass = /* #__PURE__ */factory(name$140, dependencies$141, functio
 
 
     for (var _i2 = 0; _i2 < other.units.length; _i2++) {
-      // Make a deep copy
-      var inverted = {};
+      // Make a shallow copy of every unit
+      var inverted = _objectSpread$1(_objectSpread$1({}, other.units[_i2]), {}, {
+        power: -other.units[_i2].power
+      });
 
-      for (var key in other.units[_i2]) {
-        inverted[key] = other.units[_i2][key];
-      }
-
-      inverted.power = -inverted.power;
       res.units.push(inverted);
     } // If at least one operand has a value, the result should have a value
 
@@ -32414,9 +32234,11 @@ var createUnitClass = /* #__PURE__ */factory(name$140, dependencies$141, functio
     var matchingBase;
 
     for (var key in currentUnitSystem) {
-      if (ret.hasBase(BASE_UNITS[key])) {
-        matchingBase = key;
-        break;
+      if (hasOwnProperty(currentUnitSystem, key)) {
+        if (ret.hasBase(BASE_UNITS[key])) {
+          matchingBase = key;
+          break;
+        }
       }
     }
 
@@ -32591,11 +32413,13 @@ var createUnitClass = /* #__PURE__ */factory(name$140, dependencies$141, functio
     }
 
     for (var i in simp.units) {
-      if (simp.units[i].unit) {
-        if (simp.units[i].unit.name === 'VA' && isImaginary) {
-          simp.units[i].unit = UNITS.VAR;
-        } else if (simp.units[i].unit.name === 'VAR' && !isImaginary) {
-          simp.units[i].unit = UNITS.VA;
+      if (hasOwnProperty(simp.units, i)) {
+        if (simp.units[i].unit) {
+          if (simp.units[i].unit.name === 'VA' && isImaginary) {
+            simp.units[i].unit = UNITS.VAR;
+          } else if (simp.units[i].unit.name === 'VAR' && !isImaginary) {
+            simp.units[i].unit = UNITS.VA;
+          }
         }
       }
     } // Now apply the best prefix
@@ -33481,7 +33305,9 @@ var createUnitClass = /* #__PURE__ */factory(name$140, dependencies$141, functio
   };
 
   for (var key in BASE_UNITS) {
-    BASE_UNITS[key].key = key;
+    if (hasOwnProperty(BASE_UNITS, key)) {
+      BASE_UNITS[key].key = key;
+    }
   }
 
   var BASE_UNIT_NONE = {};
@@ -35053,8 +34879,10 @@ var createUnitClass = /* #__PURE__ */factory(name$140, dependencies$141, functio
 
   Unit.getUnitSystem = function () {
     for (var _key in UNIT_SYSTEMS) {
-      if (UNIT_SYSTEMS[_key] === currentUnitSystem) {
-        return _key;
+      if (hasOwnProperty(UNIT_SYSTEMS, _key)) {
+        if (UNIT_SYSTEMS[_key] === currentUnitSystem) {
+          return _key;
+        }
       }
     }
   };
@@ -35097,8 +34925,10 @@ var createUnitClass = /* #__PURE__ */factory(name$140, dependencies$141, functio
 
 
   for (var _key2 in UNITS) {
-    var unit = UNITS[_key2];
-    unit.dimensions = unit.base.dimensions;
+    if (hasOwnProperty(UNITS, _key2)) {
+      var unit = UNITS[_key2];
+      unit.dimensions = unit.base.dimensions;
+    }
   } // Create aliases
 
 
@@ -37922,17 +37752,19 @@ var createNorm = /* #__PURE__ */factory(name$181, dependencies$182, function (_r
 });
 
 var name$182 = 'dot';
-var dependencies$183 = ['typed', 'add', 'multiply'];
+var dependencies$183 = ['typed', 'addScalar', 'multiplyScalar', 'conj', 'size'];
 var createDot = /* #__PURE__ */factory(name$182, dependencies$183, function (_ref) {
   var typed = _ref.typed,
-      add = _ref.add,
-      multiply = _ref.multiply;
+      addScalar = _ref.addScalar,
+      multiplyScalar = _ref.multiplyScalar,
+      conj = _ref.conj,
+      size = _ref.size;
 
   /**
    * Calculate the dot product of two vectors. The dot product of
-   * `A = [a1, a2, a3, ..., an]` and `B = [b1, b2, b3, ..., bn]` is defined as:
+   * `A = [a1, a2, ..., an]` and `B = [b1, b2, ..., bn]` is defined as:
    *
-   *    dot(A, B) = a1 * b1 + a2 * b2 + a3 * b3 + ... + an * bn
+   *    dot(A, B) = conj(a1) * b1 + conj(a2) * b2 + ... + conj(an) * bn
    *
    * Syntax:
    *
@@ -37952,41 +37784,144 @@ var createDot = /* #__PURE__ */factory(name$182, dependencies$183, function (_re
    * @return {number}               Returns the dot product of `x` and `y`
    */
   return typed(name$182, {
-    'Matrix, Matrix': function MatrixMatrix(x, y) {
-      return _dot(x.toArray(), y.toArray());
-    },
-    'Matrix, Array': function MatrixArray(x, y) {
-      return _dot(x.toArray(), y);
-    },
-    'Array, Matrix': function ArrayMatrix(x, y) {
-      return _dot(x, y.toArray());
-    },
-    'Array, Array': _dot
+    'Array | DenseMatrix, Array | DenseMatrix': _denseDot,
+    'SparseMatrix, SparseMatrix': _sparseDot
   });
-  /**
-   * Calculate the dot product for two arrays
-   * @param {Array} x  First vector
-   * @param {Array} y  Second vector
-   * @returns {number} Returns the dot product of x and y
-   * @private
-   */
-  // TODO: double code with math.multiply
 
-  function _dot(x, y) {
-    var xSize = arraySize(x);
-    var ySize = arraySize(y);
-    var len = xSize[0];
-    if (xSize.length !== 1 || ySize.length !== 1) throw new RangeError('Vector expected'); // TODO: better error message
+  function _validateDim(x, y) {
+    var xSize = _size(x);
 
-    if (xSize[0] !== ySize[0]) throw new RangeError('Vectors must have equal length (' + xSize[0] + ' != ' + ySize[0] + ')');
-    if (len === 0) throw new RangeError('Cannot calculate the dot product of empty vectors');
-    var prod = 0;
+    var ySize = _size(y);
 
-    for (var i = 0; i < len; i++) {
-      prod = add(prod, multiply(x[i], y[i]));
+    var xLen, yLen;
+
+    if (xSize.length === 1) {
+      xLen = xSize[0];
+    } else if (xSize.length === 2 && xSize[1] === 1) {
+      xLen = xSize[0];
+    } else {
+      throw new RangeError('Expected a column vector, instead got a matrix of size (' + xSize.join(', ') + ')');
     }
 
-    return prod;
+    if (ySize.length === 1) {
+      yLen = ySize[0];
+    } else if (ySize.length === 2 && ySize[1] === 1) {
+      yLen = ySize[0];
+    } else {
+      throw new RangeError('Expected a column vector, instead got a matrix of size (' + ySize.join(', ') + ')');
+    }
+
+    if (xLen !== yLen) throw new RangeError('Vectors must have equal length (' + xLen + ' != ' + yLen + ')');
+    if (xLen === 0) throw new RangeError('Cannot calculate the dot product of empty vectors');
+    return xLen;
+  }
+
+  function _denseDot(a, b) {
+    var N = _validateDim(a, b);
+
+    var adata = isMatrix(a) ? a._data : a;
+    var adt = isMatrix(a) ? a._datatype : undefined;
+    var bdata = isMatrix(b) ? b._data : b;
+    var bdt = isMatrix(b) ? b._datatype : undefined; // are these 2-dimensional column vectors? (as opposed to 1-dimensional vectors)
+
+    var aIsColumn = _size(a).length === 2;
+    var bIsColumn = _size(b).length === 2;
+    var add = addScalar;
+    var mul = multiplyScalar; // process data types
+
+    if (adt && bdt && adt === bdt && typeof adt === 'string') {
+      var dt = adt; // find signatures that matches (dt, dt)
+
+      add = typed.find(addScalar, [dt, dt]);
+      mul = typed.find(multiplyScalar, [dt, dt]);
+    } // both vectors 1-dimensional
+
+
+    if (!aIsColumn && !bIsColumn) {
+      var c = mul(conj(adata[0]), bdata[0]);
+
+      for (var i = 1; i < N; i++) {
+        c = add(c, mul(conj(adata[i]), bdata[i]));
+      }
+
+      return c;
+    } // a is 1-dim, b is column
+
+
+    if (!aIsColumn && bIsColumn) {
+      var _c = mul(conj(adata[0]), bdata[0][0]);
+
+      for (var _i = 1; _i < N; _i++) {
+        _c = add(_c, mul(conj(adata[_i]), bdata[_i][0]));
+      }
+
+      return _c;
+    } // a is column, b is 1-dim
+
+
+    if (aIsColumn && !bIsColumn) {
+      var _c2 = mul(conj(adata[0][0]), bdata[0]);
+
+      for (var _i2 = 1; _i2 < N; _i2++) {
+        _c2 = add(_c2, mul(conj(adata[_i2][0]), bdata[_i2]));
+      }
+
+      return _c2;
+    } // both vectors are column
+
+
+    if (aIsColumn && bIsColumn) {
+      var _c3 = mul(conj(adata[0][0]), bdata[0][0]);
+
+      for (var _i3 = 1; _i3 < N; _i3++) {
+        _c3 = add(_c3, mul(conj(adata[_i3][0]), bdata[_i3][0]));
+      }
+
+      return _c3;
+    }
+  }
+
+  function _sparseDot(x, y) {
+    _validateDim(x, y);
+
+    var xindex = x._index;
+    var xvalues = x._values;
+    var yindex = y._index;
+    var yvalues = y._values; // TODO optimize add & mul using datatype
+
+    var c = 0;
+    var add = addScalar;
+    var mul = multiplyScalar;
+    var i = 0;
+    var j = 0;
+
+    while (i < xindex.length && j < yindex.length) {
+      var I = xindex[i];
+      var J = yindex[j];
+
+      if (I < J) {
+        i++;
+        continue;
+      }
+
+      if (I > J) {
+        j++;
+        continue;
+      }
+
+      if (I === J) {
+        c = add(c, mul(xvalues[i], yvalues[j]));
+        i++;
+        j++;
+      }
+    }
+
+    return c;
+  } // TODO remove this once #1771 is fixed
+
+
+  function _size(x) {
+    return isMatrix(x) ? x.size() : size(x);
   }
 });
 
@@ -38213,18 +38148,6 @@ var createNode = /* #__PURE__ */factory(name$185, dependencies$186, function (_r
   Node.prototype.evaluate = function (scope) {
     return this.compile().evaluate(scope);
   };
-  /**
-   * Evaluate the node
-   * @param {Object} [scope]  Scope to read/write variables
-   * @return {*}              Returns the result
-   */
-  // TODO: Deprecated since v6.0.0. Clean up some day
-
-
-  Node.prototype.eval = function (scope) {
-    warnOnce('Method Node.eval is renamed to Node.evaluate. Please use the new method name.');
-    return this.evaluate(scope);
-  };
 
   Node.prototype.type = 'Node';
   Node.prototype.isNode = true;
@@ -38253,12 +38176,7 @@ var createNode = /* #__PURE__ */factory(name$185, dependencies$186, function (_r
     }
 
     return {
-      evaluate: evaluate,
-      // TODO: Deprecated since v6.0.0. Clean up some day
-      eval: function deprecatedEval(scope) {
-        warnOnce('Method eval is renamed to evaluate. Please use the new method.');
-        return evaluate(scope);
-      }
+      evaluate: evaluate
     };
   };
   /**
@@ -38400,16 +38318,6 @@ var createNode = /* #__PURE__ */factory(name$185, dependencies$186, function (_r
       }
     });
     return nodes;
-  }; // TODO: deprecated since version 1.1.0, remove this some day
-
-
-  Node.prototype.find = function () {
-    throw new Error('Function Node.find is deprecated. Use Node.filter instead.');
-  }; // TODO: deprecated since version 1.1.0, remove this some day
-
-
-  Node.prototype.match = function () {
-    throw new Error('Function Node.match is deprecated. See functions Node.filter, Node.transform, Node.traverse.');
   };
   /**
    * Create a shallow clone of this node
@@ -38921,17 +38829,7 @@ var createArrayNode = /* #__PURE__ */factory(name$187, dependencies$188, functio
 
     if (!Array.isArray(this.items) || !this.items.every(isNode)) {
       throw new TypeError('Array containing Nodes expected');
-    } // TODO: deprecated since v3, remove some day
-
-
-    var deprecated = function deprecated() {
-      throw new Error('Property `ArrayNode.nodes` is deprecated, use `ArrayNode.items` instead');
-    };
-
-    Object.defineProperty(this, 'nodes', {
-      get: deprecated,
-      set: deprecated
-    });
+    }
   }
 
   ArrayNode.prototype = new Node();
@@ -40754,11 +40652,6 @@ var createConstantNode = /* #__PURE__ */factory(name$191, dependencies$192, func
       throw new SyntaxError('Constructor must be called with the new operator');
     }
 
-    if (arguments.length === 2) {
-      // TODO: remove deprecation error some day (created 2018-01-23)
-      throw new SyntaxError('new ConstantNode(valueStr, valueType) is not supported anymore since math v4.0.0. Use new ConstantNode(value) instead, where value is a non-stringified value.');
-    }
-
     this.value = value;
   }
 
@@ -40896,6 +40789,10 @@ var createConstantNode = /* #__PURE__ */factory(name$191, dependencies$192, func
       case 'number':
       case 'BigNumber':
         {
+          if (!isFinite(this.value)) {
+            return this.value.valueOf() < 0 ? '-\\infty' : '\\infty';
+          }
+
           var index = value.toLowerCase().indexOf('e');
 
           if (index !== -1) {
@@ -41148,7 +41045,7 @@ function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableTo
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(n); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
 function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
 
@@ -41191,17 +41088,7 @@ var createIndexNode = /* #__PURE__ */factory(name$193, dependencies$194, functio
 
     if (this.dotNotation && !this.isObjectProperty()) {
       throw new Error('dotNotation only applicable for object properties');
-    } // TODO: deprecated since v3, remove some day
-
-
-    var deprecated = function deprecated() {
-      throw new Error('Property `IndexNode.object` is deprecated, use `IndexNode.fn` instead');
-    };
-
-    Object.defineProperty(this, 'object', {
-      get: deprecated,
-      set: deprecated
-    });
+    }
   }
 
   IndexNode.prototype = new Node();
@@ -43225,15 +43112,6 @@ var createFunctionNode = /* #__PURE__ */factory(name$200, dependencies$201, func
       set: function set$$1() {
         throw new Error('Cannot assign a new name, name is read-only');
       }
-    }); // TODO: deprecated since v3, remove some day
-
-    var deprecated = function deprecated() {
-      throw new Error('Property `FunctionNode.object` is deprecated, use `FunctionNode.fn` instead');
-    };
-
-    Object.defineProperty(this, 'object', {
-      get: deprecated,
-      set: deprecated
     });
   }
 
@@ -45467,20 +45345,6 @@ var createEvaluate = /* #__PURE__ */factory(name$203, dependencies$204, function
   });
 });
 
-// For backward compatibility, deprecated since version 6.0.0. Date: 2018-12-05
-var createDeprecatedEval = /* #__PURE__ */factory('eval', ['evaluate'], function (_ref) {
-  var evaluate = _ref.evaluate;
-  return function () {
-    warnOnce('Function "eval" has been renamed to "evaluate" in v6.0.0, please use the new function instead.');
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    return evaluate.apply(evaluate, args);
-  };
-});
-
 var name$204 = 'Parser';
 var dependencies$205 = ['parse'];
 var createParserClass = /* #__PURE__ */factory(name$204, dependencies$205, function (_ref) {
@@ -45549,53 +45413,15 @@ var createParserClass = /* #__PURE__ */factory(name$204, dependencies$205, funct
   Parser.prototype.type = 'Parser';
   Parser.prototype.isParser = true;
   /**
-   * Parse an expression and return the parsed function node.
-   * The node tree can be compiled via `code = node.compile(math)`,
-   * and the compiled code can be executed as `code.evaluate([scope])`
-   * @param {string} expr
-   * @return {Node} node
-   * @throws {Error}
-   */
-
-  Parser.prototype.parse = function (expr) {
-    throw new Error('Parser.parse is deprecated. Use math.parse instead.');
-  };
-  /**
-   * Parse and compile an expression, return the compiled javascript code.
-   * The node can be evaluated via code.evaluate([scope])
-   * @param {string} expr
-   * @return {{evaluate: function}} code
-   * @throws {Error}
-   */
-
-
-  Parser.prototype.compile = function (expr) {
-    throw new Error('Parser.compile is deprecated. Use math.compile instead.');
-  };
-  /**
    * Parse and evaluate the given expression
    * @param {string} expr   A string containing an expression, for example "2+3"
    * @return {*} result     The result, or undefined when the expression was empty
    * @throws {Error}
    */
-
 
   Parser.prototype.evaluate = function (expr) {
     // TODO: validate arguments
     return parse(expr).compile().evaluate(this.scope);
-  };
-  /**
-   * Parse and evaluate the given expression
-   * @param {string} expr   A string containing an expression, for example "2+3"
-   * @return {*} result     The result, or undefined when the expression was empty
-   * @throws {Error}
-   */
-  // TODO: Deprecated since v6.0.0. Clean up some day
-
-
-  Parser.prototype.eval = function (expr) {
-    warnOnce('Method Parser.eval is renamed to Parser.evaluate. Please use the new method name.');
-    return this.evaluate(expr);
   };
   /**
    * Get a variable (a function or variable) by name from the parsers scope.
@@ -46307,15 +46133,8 @@ var createQr = /* #__PURE__ */factory(name$207, dependencies$208, function (_ref
          */
 
 
-<<<<<<< HEAD
         for (i = 0; i < rows; i++) {
           s = 0.0; // calculate ith element of [Q * w]
-=======
-const substitute = function( pattern, bindings ) {
-  if (typeof pattern === 'number' || typeof pattern === "boolean") {
-  	return pattern;
-  }
->>>>>>> 5c403b60d2169d6c676026720ae2e8f002c57653
 
           for (j = k; j < rows; j++) {
             s = addScalar(s, multiplyScalar(Qdata[i][j], w[j]));
@@ -48484,14 +48303,11 @@ var createHelpClass = /* #__PURE__ */factory(name$215, dependencies$216, functio
 
   Help.fromJSON = function (json) {
     var doc = {};
-
-    for (var prop in json) {
-      if (prop !== 'mathjs') {
-        // ignore mathjs field
-        doc[prop] = json[prop];
-      }
-    }
-
+    Object.keys(json).filter(function (prop) {
+      return prop !== 'mathjs';
+    }).forEach(function (prop) {
+      doc[prop] = json[prop];
+    });
     return new Help(doc);
   };
   /**
@@ -50913,8 +50729,6 @@ var embeddedDocs = {
   im: imDocs,
   // functions - expression
   evaluate: evaluateDocs,
-  eval: evaluateDocs,
-  // TODO: deprecated, cleanup in v7
   help: helpDocs,
   // functions - geometry
   distance: distanceDocs,
@@ -51003,8 +50817,6 @@ var embeddedDocs = {
   std: stdDocs,
   sum: sumDocs,
   variance: varianceDocs,
-  "var": varianceDocs,
-  // TODO: deprecated, cleanup in v7
   // functions - trigonometry
   acos: acosDocs,
   acosh: acoshDocs,
@@ -51046,8 +50858,6 @@ var embeddedDocs = {
   isZero: isZeroDocs,
   // print: printDocs // TODO: add documentation for print as soon as the parser supports objects.
   typeOf: typeOfDocs,
-  "typeof": typeOfDocs,
-  // TODO: deprecated, cleanup in v7
   numeric: numericDocs
 };
 
@@ -51543,9 +51353,10 @@ var createEigs = /* #__PURE__ */factory(name$221, dependencies$222, function (_r
    * Examples:
    *
    *     const H = [[5, 2.3], [2.3, 1]]
-   *     const ans = math.eigs(H) // returns {values: [E1,E2...sorted], vectors: [v1,v2.... corresponding vectors]}
+   *     const ans = math.eigs(H) // returns {values: [E1,E2...sorted], vectors: [v1,v2.... corresponding vectors as columns]}
    *     const E = ans.values
    *     const U = ans.vectors
+   *     math.multiply(H, math.column(U, 0)) // returns math.multiply(E[0], math.column(U, 0))
    *     const UTxHxU = math.multiply(math.transpose(U), H, U) // rotates H to the eigen-representation
    *     E[0] == UTxHxU[0][0]  // returns true
    * See also:
@@ -51553,7 +51364,7 @@ var createEigs = /* #__PURE__ */factory(name$221, dependencies$222, function (_r
    *     inv
    *
    * @param {Array | Matrix} x  Matrix to be diagonalized
-   * @return {{values: Array, vectors: Array} | {values: Matrix, vectors: Matrix}} Object containing eigenvalues (Array or Matrix) and eigenvectors (2D Array/Matrix).
+   * @return {{values: Array, vectors: Array} | {values: Matrix, vectors: Matrix}} Object containing eigenvalues (Array or Matrix) and eigenvectors (2D Array/Matrix with eigenvectors as columns).
    */
   var eigs = typed('eigs', {
     Array: function Array(x) {
@@ -53329,19 +53140,6 @@ var createVariance = /* #__PURE__ */factory(name$231, dependencies$232, function
       throw improveErrorMessage(err, 'variance');
     }
   }
-}); // For backward compatibility, deprecated since version 6.0.0. Date: 2018-11-09
-
-var createDeprecatedVar = /* #__PURE__ */factory('var', ['variance'], function (_ref2) {
-  var variance = _ref2.variance;
-  return function () {
-    warnOnce('Function "var" has been renamed to "variance" in v6.0.0, please use the new function instead.');
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    return variance.apply(variance, args);
-  };
 });
 
 var name$232 = 'quantileSeq';
@@ -56311,17 +56109,21 @@ var createSimplify = /* #__PURE__ */factory(name$252, dependencies$253, function
 
 
     for (var key in match1.placeholders) {
-      res.placeholders[key] = match1.placeholders[key];
+      if (hasOwnProperty(match1.placeholders, key)) {
+        res.placeholders[key] = match1.placeholders[key];
 
-      if (hasOwnProperty(match2.placeholders, key)) {
-        if (!_exactMatch(match1.placeholders[key], match2.placeholders[key])) {
-          return null;
+        if (hasOwnProperty(match2.placeholders, key)) {
+          if (!_exactMatch(match1.placeholders[key], match2.placeholders[key])) {
+            return null;
+          }
         }
       }
     }
 
     for (var _key in match2.placeholders) {
-      res.placeholders[_key] = match2.placeholders[_key];
+      if (hasOwnProperty(match2.placeholders, _key)) {
+        res.placeholders[_key] = match2.placeholders[_key];
+      }
     }
 
     return res;
@@ -58056,7 +57858,35 @@ var createReviver = /* #__PURE__ */factory(name$255, dependencies$256, function 
   };
 });
 
-var version = '6.6.4'; // Note: This file is automatically generated when building math.js.
+var name$256 = 'replacer';
+var dependencies$257 = [];
+var createReplacer = /* #__PURE__ */factory(name$256, dependencies$257, function () {
+  /**
+   * Stringify data types into their JSON representation.
+   * Most data types can be serialized using their `.toJSON` method,
+   * but not all, for example the number `Infinity`. For these cases you have
+   * to use the replacer. Example usage:
+   *
+   *     JSON.stringify([2, Infinity], math.replacer)
+   *
+   * @param {string} key
+   * @param {*} value
+   * @returns {*} Returns the replaced object
+   */
+  return function replacer(key, value) {
+    // the numeric values Infinitiy, -Infinity, and NaN cannot be serialized to JSON
+    if (typeof value === 'number' && (!isFinite(value) || isNaN(value))) {
+      return {
+        mathjs: 'number',
+        value: String(value)
+      };
+    }
+
+    return value;
+  };
+});
+
+var version = '7.0.1'; // Note: This file is automatically generated when building math.js.
 // Changes made in this file will be overwritten.
 
 var createTrue = /* #__PURE__ */factory('true', [], function () {
@@ -58244,8 +58074,8 @@ function numberFactory(name, value) {
   });
 }
 
-var name$256 = 'apply';
-var dependencies$257 = ['typed', 'isInteger'];
+var name$257 = 'apply';
+var dependencies$258 = ['typed', 'isInteger'];
 /**
  * Attach a transform function to math.apply
  * Adds a property transform containing the transform function.
@@ -58254,7 +58084,7 @@ var dependencies$257 = ['typed', 'isInteger'];
  * from one-based to zero based
  */
 
-var createApplyTransform = /* #__PURE__ */factory(name$256, dependencies$257, function (_ref) {
+var createApplyTransform = /* #__PURE__ */factory(name$257, dependencies$258, function (_ref) {
   var typed = _ref.typed,
       isInteger = _ref.isInteger;
   var apply = createApply({
@@ -58284,8 +58114,8 @@ var createApplyTransform = /* #__PURE__ */factory(name$256, dependencies$257, fu
   isTransformFunction: true
 });
 
-var name$257 = 'column';
-var dependencies$258 = ['typed', 'Index', 'matrix', 'range'];
+var name$258 = 'column';
+var dependencies$259 = ['typed', 'Index', 'matrix', 'range'];
 /**
  * Attach a transform function to matrix.column
  * Adds a property transform containing the transform function.
@@ -58294,7 +58124,7 @@ var dependencies$258 = ['typed', 'Index', 'matrix', 'range'];
  * from zero-based to one-based
  */
 
-var createColumnTransform = /* #__PURE__ */factory(name$257, dependencies$258, function (_ref) {
+var createColumnTransform = /* #__PURE__ */factory(name$258, dependencies$259, function (_ref) {
   var typed = _ref.typed,
       Index = _ref.Index,
       matrix = _ref.matrix,
@@ -58357,9 +58187,9 @@ function compileInlineExpression(expression, math, scope) {
   };
 }
 
-var name$258 = 'filter';
-var dependencies$259 = ['typed'];
-var createFilterTransform = /* #__PURE__ */factory(name$258, dependencies$259, function (_ref) {
+var name$259 = 'filter';
+var dependencies$260 = ['typed'];
+var createFilterTransform = /* #__PURE__ */factory(name$259, dependencies$260, function (_ref) {
   var typed = _ref.typed;
 
   /**
@@ -58432,9 +58262,9 @@ function _filter(x, callback) {
   });
 }
 
-var name$259 = 'forEach';
-var dependencies$260 = ['typed'];
-var createForEachTransform = /* #__PURE__ */factory(name$259, dependencies$260, function (_ref) {
+var name$260 = 'forEach';
+var dependencies$261 = ['typed'];
+var createForEachTransform = /* #__PURE__ */factory(name$260, dependencies$261, function (_ref) {
   var typed = _ref.typed;
 
   /**
@@ -58498,9 +58328,9 @@ var createForEachTransform = /* #__PURE__ */factory(name$259, dependencies$260, 
   isTransformFunction: true
 });
 
-var name$260 = 'index';
-var dependencies$261 = ['Index'];
-var createIndexTransform = /* #__PURE__ */factory(name$260, dependencies$261, function (_ref) {
+var name$261 = 'index';
+var dependencies$262 = ['Index'];
+var createIndexTransform = /* #__PURE__ */factory(name$261, dependencies$262, function (_ref) {
   var Index = _ref.Index;
 
   /**
@@ -58546,9 +58376,9 @@ var createIndexTransform = /* #__PURE__ */factory(name$260, dependencies$261, fu
   isTransformFunction: true
 });
 
-var name$261 = 'map';
-var dependencies$262 = ['typed'];
-var createMapTransform = /* #__PURE__ */factory(name$261, dependencies$262, function (_ref) {
+var name$262 = 'map';
+var dependencies$263 = ['typed'];
+var createMapTransform = /* #__PURE__ */factory(name$262, dependencies$263, function (_ref) {
   var typed = _ref.typed;
 
   /**
@@ -58626,9 +58456,9 @@ function _map$1(array, callback, orig) {
   return recurse(array, []);
 }
 
-var name$262 = 'max';
-var dependencies$263 = ['typed', 'larger'];
-var createMaxTransform = /* #__PURE__ */factory(name$262, dependencies$263, function (_ref) {
+var name$263 = 'max';
+var dependencies$264 = ['typed', 'larger'];
+var createMaxTransform = /* #__PURE__ */factory(name$263, dependencies$264, function (_ref) {
   var typed = _ref.typed,
       larger = _ref.larger;
   var max = createMax({
@@ -58667,9 +58497,9 @@ var createMaxTransform = /* #__PURE__ */factory(name$262, dependencies$263, func
   isTransformFunction: true
 });
 
-var name$263 = 'mean';
-var dependencies$264 = ['typed', 'add', 'divide'];
-var createMeanTransform = /* #__PURE__ */factory(name$263, dependencies$264, function (_ref) {
+var name$264 = 'mean';
+var dependencies$265 = ['typed', 'add', 'divide'];
+var createMeanTransform = /* #__PURE__ */factory(name$264, dependencies$265, function (_ref) {
   var typed = _ref.typed,
       add = _ref.add,
       divide = _ref.divide;
@@ -58710,9 +58540,9 @@ var createMeanTransform = /* #__PURE__ */factory(name$263, dependencies$264, fun
   isTransformFunction: true
 });
 
-var name$264 = 'min';
-var dependencies$265 = ['typed', 'smaller'];
-var createMinTransform = /* #__PURE__ */factory(name$264, dependencies$265, function (_ref) {
+var name$265 = 'min';
+var dependencies$266 = ['typed', 'smaller'];
+var createMinTransform = /* #__PURE__ */factory(name$265, dependencies$266, function (_ref) {
   var typed = _ref.typed,
       smaller = _ref.smaller;
   var min = createMin({
@@ -58751,9 +58581,9 @@ var createMinTransform = /* #__PURE__ */factory(name$264, dependencies$265, func
   isTransformFunction: true
 });
 
-var name$265 = 'range';
-var dependencies$266 = ['typed', 'config', '?matrix', '?bignumber', 'smaller', 'smallerEq', 'larger', 'largerEq'];
-var createRangeTransform = /* #__PURE__ */factory(name$265, dependencies$266, function (_ref) {
+var name$266 = 'range';
+var dependencies$267 = ['typed', 'config', '?matrix', '?bignumber', 'smaller', 'smallerEq', 'larger', 'largerEq'];
+var createRangeTransform = /* #__PURE__ */factory(name$266, dependencies$267, function (_ref) {
   var typed = _ref.typed,
       config = _ref.config,
       matrix = _ref.matrix,
@@ -58796,8 +58626,8 @@ var createRangeTransform = /* #__PURE__ */factory(name$265, dependencies$266, fu
   isTransformFunction: true
 });
 
-var name$266 = 'row';
-var dependencies$267 = ['typed', 'Index', 'matrix', 'range'];
+var name$267 = 'row';
+var dependencies$268 = ['typed', 'Index', 'matrix', 'range'];
 /**
  * Attach a transform function to matrix.column
  * Adds a property transform containing the transform function.
@@ -58806,7 +58636,7 @@ var dependencies$267 = ['typed', 'Index', 'matrix', 'range'];
  * from zero-based to one-based
  */
 
-var createRowTransform = /* #__PURE__ */factory(name$266, dependencies$267, function (_ref) {
+var createRowTransform = /* #__PURE__ */factory(name$267, dependencies$268, function (_ref) {
   var typed = _ref.typed,
       Index = _ref.Index,
       matrix = _ref.matrix,
@@ -58839,9 +58669,9 @@ var createRowTransform = /* #__PURE__ */factory(name$266, dependencies$267, func
   isTransformFunction: true
 });
 
-var name$267 = 'subset';
-var dependencies$268 = ['typed', 'matrix'];
-var createSubsetTransform = /* #__PURE__ */factory(name$267, dependencies$268, function (_ref) {
+var name$268 = 'subset';
+var dependencies$269 = ['typed', 'matrix'];
+var createSubsetTransform = /* #__PURE__ */factory(name$268, dependencies$269, function (_ref) {
   var typed = _ref.typed,
       matrix = _ref.matrix;
   var subset = createSubset({
@@ -58868,9 +58698,9 @@ var createSubsetTransform = /* #__PURE__ */factory(name$267, dependencies$268, f
   isTransformFunction: true
 });
 
-var name$268 = 'concat';
-var dependencies$269 = ['typed', 'matrix', 'isInteger'];
-var createConcatTransform = /* #__PURE__ */factory(name$268, dependencies$269, function (_ref) {
+var name$269 = 'concat';
+var dependencies$270 = ['typed', 'matrix', 'isInteger'];
+var createConcatTransform = /* #__PURE__ */factory(name$269, dependencies$270, function (_ref) {
   var typed = _ref.typed,
       matrix = _ref.matrix,
       isInteger = _ref.isInteger;
@@ -58910,8 +58740,8 @@ var createConcatTransform = /* #__PURE__ */factory(name$268, dependencies$269, f
   isTransformFunction: true
 });
 
-var name$269 = 'std';
-var dependencies$270 = ['typed', 'sqrt', 'variance'];
+var name$270 = 'std';
+var dependencies$271 = ['typed', 'sqrt', 'variance'];
 /**
  * Attach a transform function to math.std
  * Adds a property transform containing the transform function.
@@ -58920,7 +58750,7 @@ var dependencies$270 = ['typed', 'sqrt', 'variance'];
  * from one-based to zero based
  */
 
-var createStdTransform = /* #__PURE__ */factory(name$269, dependencies$270, function (_ref) {
+var createStdTransform = /* #__PURE__ */factory(name$270, dependencies$271, function (_ref) {
   var typed = _ref.typed,
       sqrt = _ref.sqrt,
       variance = _ref.variance;
@@ -58961,9 +58791,9 @@ var createStdTransform = /* #__PURE__ */factory(name$269, dependencies$270, func
  * from one-based to zero based
  */
 
-var name$270 = 'sum';
-var dependencies$271 = ['typed', 'config', 'add', '?bignumber', '?fraction'];
-var createSumTransform = /* #__PURE__ */factory(name$270, dependencies$271, function (_ref) {
+var name$271 = 'sum';
+var dependencies$272 = ['typed', 'config', 'add', '?bignumber', '?fraction'];
+var createSumTransform = /* #__PURE__ */factory(name$271, dependencies$272, function (_ref) {
   var typed = _ref.typed,
       config = _ref.config,
       add = _ref.add,
@@ -58976,7 +58806,7 @@ var createSumTransform = /* #__PURE__ */factory(name$270, dependencies$271, func
     bignumber: bignumber,
     fraction: fraction
   });
-  return typed(name$270, {
+  return typed(name$271, {
     '...any': function any(args) {
       // change last argument dim from one-based to zero-based
       if (args.length === 2 && isCollection(args[0])) {
@@ -59000,8 +58830,8 @@ var createSumTransform = /* #__PURE__ */factory(name$270, dependencies$271, func
   isTransformFunction: true
 });
 
-var name$271 = 'variance';
-var dependencies$272 = ['typed', 'add', 'subtract', 'multiply', 'divide', 'apply', 'isNaN'];
+var name$272 = 'variance';
+var dependencies$273 = ['typed', 'add', 'subtract', 'multiply', 'divide', 'apply', 'isNaN'];
 /**
  * Attach a transform function to math.var
  * Adds a property transform containing the transform function.
@@ -59010,7 +58840,7 @@ var dependencies$272 = ['typed', 'add', 'subtract', 'multiply', 'divide', 'apply
  * from one-based to zero based
  */
 
-var createVarianceTransform = /* #__PURE__ */factory(name$271, dependencies$272, function (_ref) {
+var createVarianceTransform = /* #__PURE__ */factory(name$272, dependencies$273, function (_ref) {
   var typed = _ref.typed,
       add = _ref.add,
       subtract = _ref.subtract,
@@ -59027,7 +58857,7 @@ var createVarianceTransform = /* #__PURE__ */factory(name$271, dependencies$272,
     apply: apply,
     isNaN: isNaN
   });
-  return typed(name$271, {
+  return typed(name$272, {
     '...any': function any(args) {
       // change last argument dim from one-based to zero-based
       if (args.length >= 2 && isCollection(args[0])) {
@@ -59071,7 +58901,6 @@ var allFactories = /*#__PURE__*/Object.freeze({
   createIsZero: createIsZero,
   createIsNaN: createIsNaN,
   createTypeOf: createTypeOf,
-  createDeprecatedTypeof: createDeprecatedTypeof,
   createEqualScalar: createEqualScalar,
   createSparseMatrixClass: createSparseMatrixClass,
   createNumber: createNumber,
@@ -59123,7 +58952,6 @@ var allFactories = /*#__PURE__*/Object.freeze({
   createColumn: createColumn,
   createCross: createCross,
   createDiag: createDiag,
-  createEye: createEye,
   createFilter: createFilter,
   createFlatten: createFlatten,
   createForEach: createForEach,
@@ -59247,7 +59075,6 @@ var allFactories = /*#__PURE__*/Object.freeze({
   createParse: createParse,
   createCompile: createCompile,
   createEvaluate: createEvaluate,
-  createDeprecatedEval: createDeprecatedEval,
   createParserClass: createParserClass,
   createParser: createParser,
   createLup: createLup,
@@ -59271,7 +59098,6 @@ var allFactories = /*#__PURE__*/Object.freeze({
   createMedian: createMedian,
   createMad: createMad,
   createVariance: createVariance,
-  createDeprecatedVar: createDeprecatedVar,
   createQuantileSeq: createQuantileSeq,
   createStd: createStd,
   createCombinations: createCombinations,
@@ -59292,6 +59118,7 @@ var allFactories = /*#__PURE__*/Object.freeze({
   createDerivative: createDerivative,
   createRationalize: createRationalize,
   createReviver: createReviver,
+  createReplacer: createReplacer,
   createE: createE,
   createUppercaseE: createUppercaseE,
   createFalse: createFalse,
@@ -59386,7 +59213,6 @@ var allFactories = /*#__PURE__*/Object.freeze({
 var ResultSet = /* #__PURE__ */createResultSet({});
 var Complex$1 = /* #__PURE__ */createComplexClass({});
 var Range = /* #__PURE__ */createRangeClass({});
-var eye = /* #__PURE__ */createEye({});
 var _false = /* #__PURE__ */createFalse({});
 var _null = /* #__PURE__ */createNull({});
 var _true = /* #__PURE__ */createTrue({});
@@ -59394,10 +59220,7 @@ var BigNumber = /* #__PURE__ */createBigNumberClass({
   config: config
 });
 var Matrix = /* #__PURE__ */createMatrixClass({});
-var e$1 = /* #__PURE__ */createE({
-  BigNumber: BigNumber,
-  config: config
-});
+var replacer = /* #__PURE__ */createReplacer({});
 var i = /* #__PURE__ */createI({
   Complex: Complex$1
 });
@@ -59442,22 +59265,23 @@ var weakMixingAngle = /* #__PURE__ */createWeakMixingAngle({
   config: config
 });
 var Fraction$1 = /* #__PURE__ */createFractionClass({});
-var LN2 = /* #__PURE__ */createLN2({
+var e$1 = /* #__PURE__ */createE({
   BigNumber: BigNumber,
   config: config
 });
-var phi$1 = /* #__PURE__ */createPhi({
+var _Infinity = /* #__PURE__ */createInfinity({
   BigNumber: BigNumber,
   config: config
 });
-var SQRT2 = /* #__PURE__ */createSQRT2({
+var LOG2E = /* #__PURE__ */createLOG2E({
   BigNumber: BigNumber,
   config: config
 });
+var version$1 = /* #__PURE__ */createVersion({});
 var DenseMatrix = /* #__PURE__ */createDenseMatrixClass({
   Matrix: Matrix
 });
-var _Infinity = /* #__PURE__ */createInfinity({
+var phi$1 = /* #__PURE__ */createPhi({
   BigNumber: BigNumber,
   config: config
 });
@@ -59626,7 +59450,7 @@ var randomInt = /* #__PURE__ */createRandomInt({
   config: config,
   typed: typed
 });
-var LOG2E = /* #__PURE__ */createLOG2E({
+var LN2 = /* #__PURE__ */createLN2({
   BigNumber: BigNumber,
   config: config
 });
@@ -59709,7 +59533,10 @@ var random$1 = /* #__PURE__ */createRandom({
   config: config,
   typed: typed
 });
-var version$1 = /* #__PURE__ */createVersion({});
+var SQRT2 = /* #__PURE__ */createSQRT2({
+  BigNumber: BigNumber,
+  config: config
+});
 var isNegative = /* #__PURE__ */createIsNegative({
   typed: typed
 });
@@ -59919,9 +59746,11 @@ var add$1 = /* #__PURE__ */createAdd({
   matrix: matrix,
   typed: typed
 });
-var trace = /* #__PURE__ */createTrace({
-  add: add$1,
-  matrix: matrix,
+var dot = /* #__PURE__ */createDot({
+  addScalar: addScalar,
+  conj: conj,
+  multiplyScalar: multiplyScalar,
+  size: size,
   typed: typed
 });
 var composition = /* #__PURE__ */createComposition({
@@ -59946,6 +59775,7 @@ var floor$1 = /* #__PURE__ */createFloor({
 });
 var multiply = /* #__PURE__ */createMultiply({
   addScalar: addScalar,
+  dot: dot,
   equalScalar: equalScalar,
   matrix: matrix,
   multiplyScalar: multiplyScalar,
@@ -60123,9 +59953,9 @@ var cot = /* #__PURE__ */createCot({
   BigNumber: BigNumber,
   typed: typed
 });
-var dot = /* #__PURE__ */createDot({
+var trace = /* #__PURE__ */createTrace({
   add: add$1,
-  multiply: multiply,
+  matrix: matrix,
   typed: typed
 });
 var sum = /* #__PURE__ */createSum({
@@ -60447,11 +60277,6 @@ var variance = /* #__PURE__ */createVariance({
   subtract: subtract,
   typed: typed
 });
-var std = /* #__PURE__ */createStd({
-  sqrt: sqrt$1,
-  typed: typed,
-  variance: variance
-});
 var multinomial = /* #__PURE__ */createMultinomial({
   add: add$1,
   divide: divide$1,
@@ -60639,6 +60464,11 @@ var intersect = /* #__PURE__ */createIntersect({
   subtract: subtract,
   typed: typed
 });
+var std = /* #__PURE__ */createStd({
+  sqrt: sqrt$1,
+  typed: typed,
+  variance: variance
+});
 var bellNumbers = /* #__PURE__ */createBellNumbers({
   addScalar: addScalar,
   isInteger: isInteger$1,
@@ -60775,13 +60605,6 @@ var log1p$1 = /* #__PURE__ */createLog1p({
   log: log$1,
   typed: typed
 });
-var median = /* #__PURE__ */createMedian({
-  add: add$1,
-  compare: compare,
-  divide: divide$1,
-  partitionSelect: partitionSelect,
-  typed: typed
-});
 var gasConstant = /* #__PURE__ */createGasConstant({
   BigNumber: BigNumber,
   Unit: Unit,
@@ -60801,12 +60624,14 @@ var setUnion = /* #__PURE__ */createSetUnion({
   subset: subset,
   typed: typed
 });
-var magneticFluxQuantum = /* #__PURE__ */createMagneticFluxQuantum({
-  BigNumber: BigNumber,
-  Unit: Unit,
-  config: config
+var median = /* #__PURE__ */createMedian({
+  add: add$1,
+  compare: compare,
+  divide: divide$1,
+  partitionSelect: partitionSelect,
+  typed: typed
 });
-var coulomb = /* #__PURE__ */createCoulomb({
+var magneticFluxQuantum = /* #__PURE__ */createMagneticFluxQuantum({
   BigNumber: BigNumber,
   Unit: Unit,
   config: config
@@ -60819,6 +60644,11 @@ var mad = /* #__PURE__ */createMad({
   typed: typed
 });
 var rydberg = /* #__PURE__ */createRydberg({
+  BigNumber: BigNumber,
+  Unit: Unit,
+  config: config
+});
+var coulomb = /* #__PURE__ */createCoulomb({
   BigNumber: BigNumber,
   Unit: Unit,
   config: config
@@ -60924,9 +60754,6 @@ var evaluate = createEvaluate({
   parse: parse,
   typed: typed
 });
-var Parser = createParserClass({
-  parse: parse
-});
 var Help = createHelpClass({
   parse: parse
 });
@@ -60934,8 +60761,9 @@ var compile = createCompile({
   parse: parse,
   typed: typed
 });
-var parser = createParser({
-  Parser: Parser,
+var help = createHelp({
+  Help: Help,
+  mathWithTransform: mathWithTransform,
   typed: typed
 });
 var simplify = createSimplify({
@@ -60979,11 +60807,6 @@ var rationalize = createRationalize({
   subtract: subtract,
   typed: typed
 });
-var help = createHelp({
-  Help: Help,
-  mathWithTransform: mathWithTransform,
-  typed: typed
-});
 var derivative = createDerivative({
   ConstantNode: ConstantNode,
   FunctionNode: FunctionNode,
@@ -60998,15 +60821,20 @@ var derivative = createDerivative({
   simplify: simplify,
   typed: typed
 });
+var Parser = createParserClass({
+  parse: parse
+});
+var parser = createParser({
+  Parser: Parser,
+  typed: typed
+});
 
 _extends$6(math, {
-  'typeof': typeOf$1,
-  eye: eye,
   reviver: reviver,
   "false": _false,
   "null": _null,
   "true": _true,
-  e: e$1,
+  replacer: replacer,
   i: i,
   LN10: LN10$1,
   LOG10E: LOG10E,
@@ -61018,12 +60846,13 @@ _extends$6(math, {
   fineStructure: fineStructure,
   sackurTetrode: sackurTetrode,
   weakMixingAngle: weakMixingAngle,
-  'E': e$1,
-  LN2: LN2,
-  phi: phi$1,
-  SQRT2: SQRT2,
+  e: e$1,
   Infinity: _Infinity,
+  LOG2E: LOG2E,
   'PI': pi$1,
+  version: version$1,
+  'E': e$1,
+  phi: phi$1,
   typed: typed,
   isInteger: isInteger$1,
   isNumeric: isNumeric,
@@ -61069,7 +60898,7 @@ _extends$6(math, {
   combinations: combinations,
   pickRandom: pickRandom,
   randomInt: randomInt,
-  LOG2E: LOG2E,
+  LN2: LN2,
   clone: clone$2,
   hasNumericValue: hasNumericValue,
   typeOf: typeOf$1,
@@ -61092,7 +60921,7 @@ _extends$6(math, {
   sin: sin$1,
   combinationsWithRep: combinationsWithRep,
   random: random$1,
-  version: version$1,
+  SQRT2: SQRT2,
   isNegative: isNegative,
   matrix: matrix,
   cbrt: cbrt$2,
@@ -61126,7 +60955,7 @@ _extends$6(math, {
   atan2: atan2$1,
   sec: sec,
   add: add$1,
-  trace: trace,
+  dot: dot,
   composition: composition,
   isZero: isZero,
   abs: abs$1,
@@ -61162,7 +60991,7 @@ _extends$6(math, {
   smallerEq: smallerEq,
   sort: sort,
   cot: cot,
-  dot: dot,
+  trace: trace,
   sum: sum,
   factorial: factorial,
   permutations: permutations,
@@ -61202,7 +61031,6 @@ _extends$6(math, {
   divide: divide$1,
   mean: mean,
   variance: variance,
-  std: std,
   multinomial: multinomial,
   atomicMass: atomicMass,
   bohrMagneton: bohrMagneton,
@@ -61233,7 +61061,7 @@ _extends$6(math, {
   lusolve: lusolve,
   eigs: eigs,
   intersect: intersect,
-  'var': variance,
+  std: std,
   bellNumbers: bellNumbers,
   avogadro: avogadro,
   classicalElectronRadius: classicalElectronRadius,
@@ -61261,20 +61089,19 @@ _extends$6(math, {
   thomsonCrossSection: thomsonCrossSection,
   log1p: log1p$1,
   compile: compile,
-  parser: parser,
-  median: median,
+  help: help,
   simplify: simplify,
   rationalize: rationalize,
   gasConstant: gasConstant,
   planckConstant: planckConstant,
   setUnion: setUnion,
-  help: help,
+  median: median,
   derivative: derivative,
   magneticFluxQuantum: magneticFluxQuantum,
-  'eval': evaluate,
-  coulomb: coulomb,
   mad: mad,
   rydberg: rydberg,
+  parser: parser,
+  coulomb: coulomb,
   config: config
 });
 
@@ -61393,28 +61220,13 @@ _extends$6(classes, {
   Unit: Unit,
   SymbolNode: SymbolNode,
   FunctionNode: FunctionNode,
-  Parser: Parser,
-  Help: Help
+  Help: Help,
+  Parser: Parser
 });
 
 Chain.createProxy(math);
 
 // util functions
-
-/**
- * THIS FILE IS AUTO-GENERATED
- * DON'T MAKE CHANGES HERE
- */
-
-/**
- * THIS FILE IS AUTO-GENERATED
- * DON'T MAKE CHANGES HERE
- */
-
-/**
- * THIS FILE IS AUTO-GENERATED
- * DON'T MAKE CHANGES HERE
- */
 
 /**
  * THIS FILE IS AUTO-GENERATED
@@ -63122,7 +62934,7 @@ function mixin(obj) {
   return obj;
 }
 
-function _defineProperty$1(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _defineProperty$2(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _typeof$13(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof$13 = function _typeof(obj) { return typeof obj; }; } else { _typeof$13 = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof$13(obj); }
 function importFactory(typed, load, math, importedFactories) {
@@ -63193,11 +63005,7 @@ function importFactory(typed, load, math, importedFactories) {
     }
 
     function flattenImports(flatValues, value, name) {
-      if (isLegacyFactory(value)) {
-        // legacy factories don't always have a name,
-        // let's not handle them via the new flatValues
-        _importLegacyFactory(value, options);
-      } else if (Array.isArray(value)) {
+      if (Array.isArray(value)) {
         value.forEach(function (item) {
           return flattenImports(flatValues, item);
         });
@@ -63264,7 +63072,7 @@ function importFactory(typed, load, math, importedFactories) {
 
 
     if (hasTypedFunctionSignature(value)) {
-      value = typed(name, _defineProperty$1({}, value.signature, value));
+      value = typed(name, _defineProperty$2({}, value.signature, value));
     }
 
     if (isTypedFunction(math[name]) && isTypedFunction(value)) {
@@ -63356,83 +63164,6 @@ function importFactory(typed, load, math, importedFactories) {
     }
 
     return wrapper;
-  }
-  /**
-   * Import an instance of a factory into math.js
-   * @param {{factory: Function, name: string, path: string, math: boolean}} factory
-   * @param {Object} options  See import for a description of the options
-   * @private
-   */
-  // TODO: _importLegacyFactory is deprecated since v6.0.0, clean up some day
-
-
-  function _importLegacyFactory(factory$$1, options) {
-    warnOnce('Factories of type { name, factory } are deprecated since v6. ' + 'Please create your factory functions using the math.factory function.');
-
-    if (typeof factory$$1.name === 'string') {
-      var name = factory$$1.name;
-      var existingTransform = (name in math.expression.transform);
-      var namespace = factory$$1.path ? traverse(math, factory$$1.path) : math;
-      var existing = hasOwnProperty(namespace, name) ? namespace[name] : undefined;
-
-      var resolver = function resolver() {
-        var instance = load(factory$$1);
-
-        if (instance && typeof instance.transform === 'function') {
-          throw new Error('Transforms cannot be attached to factory functions. ' + 'Please create a separate function for it with exports.path="expression.transform"');
-        }
-
-        if (isTypedFunction(existing) && isTypedFunction(instance)) {
-          if (options.override) {// replace the existing typed function (nothing to do)
-          } else {
-            // merge the existing and new typed function
-            instance = typed(existing, instance);
-          }
-
-          return instance;
-        }
-
-        if (existing === undefined || options.override) {
-          return instance;
-        }
-
-        if (options.silent) {
-          return existing;
-        } else {
-          throw new Error('Cannot import "' + name + '": already exists');
-        }
-      };
-
-      if (factory$$1.lazy !== false) {
-        lazy(namespace, name, resolver);
-
-        if (existingTransform) {
-          _deleteTransform(name);
-        } else {
-          if (factory$$1.path === 'expression.transform' || legacyFactoryAllowedInExpressions(factory$$1)) {
-            lazy(math.expression.mathWithTransform, name, resolver);
-          }
-        }
-      } else {
-        namespace[name] = resolver();
-
-        if (existingTransform) {
-          _deleteTransform(name);
-        } else {
-          if (factory$$1.path === 'expression.transform' || legacyFactoryAllowedInExpressions(factory$$1)) {
-            math.expression.mathWithTransform[name] = resolver();
-          }
-        }
-      }
-
-      var key = factory$$1.path ? factory$$1.path + '.' + factory$$1.name : factory$$1.name;
-      importedFactories[key] = factory$$1;
-      math.emit('import', name, resolver, factory$$1.path);
-    } else {
-      // unnamed factory.
-      // no lazy loading
-      load(factory$$1);
-    }
   }
   /**
    * Import an instance of a factory into math.js
@@ -63555,10 +63286,6 @@ function importFactory(typed, load, math, importedFactories) {
 
   function allowedInExpressions(name) {
     return !hasOwnProperty(unsafe, name);
-  }
-
-  function legacyFactoryAllowedInExpressions(factory$$1) {
-    return factory$$1.path === undefined && !hasOwnProperty(unsafe, factory$$1.name);
   }
 
   function factoryAllowedInExpressions(factory$$1) {
@@ -63764,136 +63491,11 @@ function create$1(factories, config) {
   math.factory = factory; // import the factory functions like createAdd as an array instead of object,
   // else they will get a different naming (`createAdd` instead of `add`).
 
-  math["import"](values(deepFlatten(factories))); // TODO: deprecated since v6.0.0. Clean up some day
-
-  var movedNames = ['type.isNumber', 'type.isComplex', 'type.isBigNumber', 'type.isFraction', 'type.isUnit', 'type.isString', 'type.isArray', 'type.isMatrix', 'type.isDenseMatrix', 'type.isSparseMatrix', 'type.isCollection', 'type.isRange', 'type.isIndex', 'type.isBoolean', 'type.isResultSet', 'type.isHelp', 'type.isFunction', 'type.isDate', 'type.isRegExp', 'type.isObject', 'type.isNull', 'type.isUndefined', 'type.isAccessorNode', 'type.isArrayNode', 'type.isAssignmentNode', 'type.isBlockNode', 'type.isConditionalNode', 'type.isConstantNode', 'type.isFunctionAssignmentNode', 'type.isFunctionNode', 'type.isIndexNode', 'type.isNode', 'type.isObjectNode', 'type.isOperatorNode', 'type.isParenthesisNode', 'type.isRangeNode', 'type.isSymbolNode', 'type.isChain', 'type.BigNumber', 'type.Chain', 'type.Complex', 'type.Fraction', 'type.Matrix', 'type.DenseMatrix', 'type.SparseMatrix', 'type.Spa', 'type.FibonacciHeap', 'type.ImmutableDenseMatrix', 'type.Index', 'type.Range', 'type.ResultSet', 'type.Unit', 'type.Help', 'type.Parser', 'expression.parse', 'expression.Parser', 'expression.node.AccessorNode', 'expression.node.ArrayNode', 'expression.node.AssignmentNode', 'expression.node.BlockNode', 'expression.node.ConditionalNode', 'expression.node.ConstantNode', 'expression.node.IndexNode', 'expression.node.FunctionAssignmentNode', 'expression.node.FunctionNode', 'expression.node.Node', 'expression.node.ObjectNode', 'expression.node.OperatorNode', 'expression.node.ParenthesisNode', 'expression.node.RangeNode', 'expression.node.RelationalNode', 'expression.node.SymbolNode', 'json.reviver', 'error.ArgumentsError', 'error.DimensionError', 'error.IndexError'];
-  movedNames.forEach(function (fullName) {
-    var parts = fullName.split('.');
-    var path = initial(parts);
-    var name = last(parts);
-    var obj = traverse(math, path);
-    lazy(obj, name, function () {
-      warnOnce("math.".concat(fullName, " is moved to math.").concat(name, " in v6.0.0. ") + 'Please use the new location instead.');
-      return math[name];
-    });
-  });
-  lazy(math.expression, 'docs', function () {
-    throw new Error('math.expression.docs has been moved. ' + 'Please import via "import { docs } from \'mathjs\'"');
-  });
+  math["import"](values(deepFlatten(factories)));
   math.ArgumentsError = ArgumentsError;
   math.DimensionError = DimensionError;
   math.IndexError = IndexError;
   return math;
-}
-
-// TODO: deprecated since version 6.0.0. Date: 2019-04-14
-var deprecatedEval = /* #__PURE__ */createDeprecatedEval({
-  evaluate: evaluate
-}); // "deprecatedImport" is also exposed as "import" in the code compiled to ES5+CommonJs
-
-var deprecatedVar = /* #__PURE__ */createDeprecatedVar({
-  variance: variance
-}); // "deprecatedTypeof" is also exposed as "typeof" in the code compiled to ES5+CommonJs
-
-var deprecatedTypeof = /* #__PURE__ */createDeprecatedTypeof({
-  typeOf: typeOf$1
-});
-var type = /* #__PURE__ */createDeprecatedProperties('type', {
-  isNumber: isNumber,
-  isComplex: isComplex,
-  isBigNumber: isBigNumber,
-  isFraction: isFraction,
-  isUnit: isUnit,
-  isString: isString,
-  isArray: isArray,
-  isMatrix: isMatrix,
-  isCollection: isCollection,
-  isDenseMatrix: isDenseMatrix,
-  isSparseMatrix: isSparseMatrix,
-  isRange: isRange,
-  isIndex: isIndex,
-  isBoolean: isBoolean,
-  isResultSet: isResultSet,
-  isHelp: isHelp,
-  isFunction: isFunction,
-  isDate: isDate,
-  isRegExp: isRegExp,
-  isObject: isObject,
-  isNull: isNull,
-  isUndefined: isUndefined,
-  isAccessorNode: isAccessorNode,
-  isArrayNode: isArrayNode,
-  isAssignmentNode: isAssignmentNode,
-  isBlockNode: isBlockNode,
-  isConditionalNode: isConditionalNode,
-  isConstantNode: isConstantNode,
-  isFunctionAssignmentNode: isFunctionAssignmentNode,
-  isFunctionNode: isFunctionNode,
-  isIndexNode: isIndexNode,
-  isNode: isNode,
-  isObjectNode: isObjectNode,
-  isOperatorNode: isOperatorNode,
-  isParenthesisNode: isParenthesisNode,
-  isRangeNode: isRangeNode,
-  isSymbolNode: isSymbolNode,
-  isChain: isChain,
-  BigNumber: BigNumber,
-  Chain: Chain,
-  Complex: Complex$1,
-  Fraction: Fraction$1,
-  Matrix: Matrix,
-  DenseMatrix: DenseMatrix,
-  SparseMatrix: SparseMatrix,
-  Spa: Spa,
-  FibonacciHeap: FibonacciHeap,
-  ImmutableDenseMatrix: ImmutableDenseMatrix,
-  Index: Index,
-  Range: Range,
-  ResultSet: ResultSet,
-  Unit: Unit,
-  Help: Help,
-  Parser: Parser
-});
-var expression = /* #__PURE__ */createDeprecatedProperties('expression', {
-  parse: parse,
-  Parser: Parser,
-  node: createDeprecatedProperties('expression.node', {
-    AccessorNode: AccessorNode,
-    ArrayNode: ArrayNode,
-    AssignmentNode: AssignmentNode,
-    BlockNode: BlockNode,
-    ConditionalNode: ConditionalNode,
-    ConstantNode: ConstantNode,
-    IndexNode: IndexNode,
-    FunctionAssignmentNode: FunctionAssignmentNode,
-    FunctionNode: FunctionNode,
-    Node: Node,
-    ObjectNode: ObjectNode,
-    OperatorNode: OperatorNode,
-    ParenthesisNode: ParenthesisNode,
-    RangeNode: RangeNode,
-    RelationalNode: RelationalNode,
-    SymbolNode: SymbolNode
-  })
-});
-var json = /* #__PURE__ */createDeprecatedProperties('json', {
-  reviver: reviver
-});
-var error = /* #__PURE__ */createDeprecatedProperties('error', {
-  ArgumentsError: ArgumentsError,
-  DimensionError: DimensionError,
-  IndexError: IndexError
-});
-
-function createDeprecatedProperties(path, props) {
-  var obj = {};
-  Object.keys(props).forEach(function (name) {
-    lazy(obj, name, function () {
-      warnOnce("math.".concat(path, ".").concat(name, " is moved to math.").concat(name, " in v6.0.0. ") + 'Please use the new location instead.');
-      return props[name];
-    });
-  });
-  return obj;
 }
 
 // configuration
@@ -81721,7 +81323,7 @@ function matchImplicitIdentity(tree, pattern, params) {
 }
 
 const substitute = function (pattern, bindings) {
-  if (typeof pattern === "number") {
+  if (typeof pattern === "number" || typeof pattern === "boolean") {
     return pattern;
   }
 
@@ -83254,44 +82856,7 @@ function is_complex_ast(tree, assumptions, original_assumptions) {
 	if(operator === '-')
 	    return is_complex_ast(operands[0], assume, original_assumptions);
 
-<<<<<<< HEAD
 	if(operator === '*' || operator === '+') {
-=======
-        if (max_digits === Infinity
-          || math$19.round(quotient, max_digits) === quotient) {
-          return ['/', quotient, denom[2]];
-        }
-      }
-    }
-    else if (typeof denom === 'number') {
-      // check if numer is a multiplication with that begins with
-      // a constant.  If so combine with denominator
-      if (Array.isArray(numer) && numer[0] === '*'
-        && (typeof numer[1] === 'number')) {
-        let quotient = numer[1] / denom;
-        if (max_digits === Infinity
-          || math$19.round(quotient, max_digits) === quotient) {
-          if (quotient === 1)
-            return numer[2];
-          else
-            return ['*', quotient, numer[2]];
-        }
-        // if denom is negative move negative to number
-        if (denom < 0)
-          return ['/', ['*', -numer[1], numer[2]], -denom];
-      }
-      let reciprocal = 1/denom;
-      if (max_digits === Infinity
-        || math$19.round(reciprocal, max_digits) === reciprocal) {
-          return ['*', reciprocal, numer];
-      }
-      // if denominator is negative, negate whole fraction
-      if (denom < 0) {
-        if (Array.isArray(numer) && numer[0] === '-')
-          return ['/', numer[1], -denom];
-        else
-          return ['-', ['/', numer, -denom]];
->>>>>>> 5c403b60d2169d6c676026720ae2e8f002c57653
 
 	    if(operator==='*') {
 		// one confirmed zero factor makes product zero
@@ -84532,477 +84097,6 @@ var is_37 = is.isChain;
 var is_38 = is.typeOf;
 var is_39 = is.isArray;
 
-var object = createCommonjsModule(function (module, exports) {
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.clone = clone;
-exports.mapObject = mapObject;
-exports.extend = extend;
-exports.deepExtend = deepExtend;
-exports.deepStrictEqual = deepStrictEqual;
-exports.deepFlatten = deepFlatten;
-exports.canDefineProperty = canDefineProperty;
-exports.lazy = lazy;
-exports.traverse = traverse;
-exports.hasOwnProperty = hasOwnProperty;
-exports.isLegacyFactory = isLegacyFactory;
-exports.get = get;
-exports.set = set;
-exports.pick = pick;
-exports.pickShallow = pickShallow;
-exports.values = values;
-
-
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-/**
- * Clone an object
- *
- *     clone(x)
- *
- * Can clone any primitive type, array, and object.
- * If x has a function clone, this function will be invoked to clone the object.
- *
- * @param {*} x
- * @return {*} clone
- */
-function clone(x) {
-  var type = _typeof(x); // immutable primitive types
-
-
-  if (type === 'number' || type === 'string' || type === 'boolean' || x === null || x === undefined) {
-    return x;
-  } // use clone function of the object when available
-
-
-  if (typeof x.clone === 'function') {
-    return x.clone();
-  } // array
-
-
-  if (Array.isArray(x)) {
-    return x.map(function (value) {
-      return clone(value);
-    });
-  }
-
-  if (x instanceof Date) return new Date(x.valueOf());
-  if ((0, is.isBigNumber)(x)) return x; // bignumbers are immutable
-
-  if (x instanceof RegExp) throw new TypeError('Cannot clone ' + x); // TODO: clone a RegExp
-  // object
-
-  return mapObject(x, clone);
-}
-/**
- * Apply map to all properties of an object
- * @param {Object} object
- * @param {function} callback
- * @return {Object} Returns a copy of the object with mapped properties
- */
-
-
-function mapObject(object, callback) {
-  var clone = {};
-
-  for (var key in object) {
-    if (hasOwnProperty(object, key)) {
-      clone[key] = callback(object[key]);
-    }
-  }
-
-  return clone;
-}
-/**
- * Extend object a with the properties of object b
- * @param {Object} a
- * @param {Object} b
- * @return {Object} a
- */
-
-
-function extend(a, b) {
-  for (var prop in b) {
-    if (hasOwnProperty(b, prop)) {
-      a[prop] = b[prop];
-    }
-  }
-
-  return a;
-}
-/**
- * Deep extend an object a with the properties of object b
- * @param {Object} a
- * @param {Object} b
- * @returns {Object}
- */
-
-
-function deepExtend(a, b) {
-  // TODO: add support for Arrays to deepExtend
-  if (Array.isArray(b)) {
-    throw new TypeError('Arrays are not supported by deepExtend');
-  }
-
-  for (var prop in b) {
-    if (hasOwnProperty(b, prop)) {
-      if (b[prop] && b[prop].constructor === Object) {
-        if (a[prop] === undefined) {
-          a[prop] = {};
-        }
-
-        if (a[prop] && a[prop].constructor === Object) {
-          deepExtend(a[prop], b[prop]);
-        } else {
-          a[prop] = b[prop];
-        }
-      } else if (Array.isArray(b[prop])) {
-        throw new TypeError('Arrays are not supported by deepExtend');
-      } else {
-        a[prop] = b[prop];
-      }
-    }
-  }
-
-  return a;
-}
-/**
- * Deep test equality of all fields in two pairs of arrays or objects.
- * Compares values and functions strictly (ie. 2 is not the same as '2').
- * @param {Array | Object} a
- * @param {Array | Object} b
- * @returns {boolean}
- */
-
-
-function deepStrictEqual(a, b) {
-  var prop, i, len;
-
-  if (Array.isArray(a)) {
-    if (!Array.isArray(b)) {
-      return false;
-    }
-
-    if (a.length !== b.length) {
-      return false;
-    }
-
-    for (i = 0, len = a.length; i < len; i++) {
-      if (!deepStrictEqual(a[i], b[i])) {
-        return false;
-      }
-    }
-
-    return true;
-  } else if (typeof a === 'function') {
-    return a === b;
-  } else if (a instanceof Object) {
-    if (Array.isArray(b) || !(b instanceof Object)) {
-      return false;
-    }
-
-    for (prop in a) {
-      // noinspection JSUnfilteredForInLoop
-      if (!(prop in b) || !deepStrictEqual(a[prop], b[prop])) {
-        return false;
-      }
-    }
-
-    for (prop in b) {
-      // noinspection JSUnfilteredForInLoop
-      if (!(prop in a) || !deepStrictEqual(a[prop], b[prop])) {
-        return false;
-      }
-    }
-
-    return true;
-  } else {
-    return a === b;
-  }
-}
-/**
- * Recursively flatten a nested object.
- * @param {Object} nestedObject
- * @return {Object} Returns the flattened object
- */
-
-
-function deepFlatten(nestedObject) {
-  var flattenedObject = {};
-
-  _deepFlatten(nestedObject, flattenedObject);
-
-  return flattenedObject;
-} // helper function used by deepFlatten
-
-
-function _deepFlatten(nestedObject, flattenedObject) {
-  for (var prop in nestedObject) {
-    if (hasOwnProperty(nestedObject, prop)) {
-      var value = nestedObject[prop];
-
-      if (_typeof(value) === 'object' && value !== null) {
-        _deepFlatten(value, flattenedObject);
-      } else {
-        flattenedObject[prop] = value;
-      }
-    }
-  }
-}
-/**
- * Test whether the current JavaScript engine supports Object.defineProperty
- * @returns {boolean} returns true if supported
- */
-
-
-function canDefineProperty() {
-  // test needed for broken IE8 implementation
-  try {
-    if (Object.defineProperty) {
-      Object.defineProperty({}, 'x', {
-        get: function get() {}
-      });
-      return true;
-    }
-  } catch (e) {}
-
-  return false;
-}
-/**
- * Attach a lazy loading property to a constant.
- * The given function `fn` is called once when the property is first requested.
- *
- * @param {Object} object         Object where to add the property
- * @param {string} prop           Property name
- * @param {Function} valueResolver Function returning the property value. Called
- *                                without arguments.
- */
-
-
-function lazy(object, prop, valueResolver) {
-  var _uninitialized = true;
-
-  var _value;
-
-  Object.defineProperty(object, prop, {
-    get: function get() {
-      if (_uninitialized) {
-        _value = valueResolver();
-        _uninitialized = false;
-      }
-
-      return _value;
-    },
-    set: function set(value) {
-      _value = value;
-      _uninitialized = false;
-    },
-    configurable: true,
-    enumerable: true
-  });
-}
-/**
- * Traverse a path into an object.
- * When a namespace is missing, it will be created
- * @param {Object} object
- * @param {string | string[]} path   A dot separated string like 'name.space'
- * @return {Object} Returns the object at the end of the path
- */
-
-
-function traverse(object, path) {
-  if (path && typeof path === 'string') {
-    return traverse(object, path.split('.'));
-  }
-
-  var obj = object;
-
-  if (path) {
-    for (var i = 0; i < path.length; i++) {
-      var key = path[i];
-
-      if (!(key in obj)) {
-        obj[key] = {};
-      }
-
-      obj = obj[key];
-    }
-  }
-
-  return obj;
-}
-/**
- * A safe hasOwnProperty
- * @param {Object} object
- * @param {string} property
- */
-
-
-function hasOwnProperty(object, property) {
-  return object && Object.hasOwnProperty.call(object, property);
-}
-/**
- * Test whether an object is a factory. a factory has fields:
- *
- * - factory: function (type: Object, config: Object, load: function, typed: function [, math: Object])   (required)
- * - name: string (optional)
- * - path: string    A dot separated path (optional)
- * - math: boolean   If true (false by default), the math namespace is passed
- *                   as fifth argument of the factory function
- *
- * @param {*} object
- * @returns {boolean}
- */
-
-
-function isLegacyFactory(object) {
-  return object && typeof object.factory === 'function';
-}
-/**
- * Get a nested property from an object
- * @param {Object} object
- * @param {string | string[]} path
- * @returns {Object}
- */
-
-
-function get(object, path) {
-  if (typeof path === 'string') {
-    if (isPath(path)) {
-      return get(object, path.split('.'));
-    } else {
-      return object[path];
-    }
-  }
-
-  var child = object;
-
-  for (var i = 0; i < path.length; i++) {
-    var key = path[i];
-    child = child ? child[key] : undefined;
-  }
-
-  return child;
-}
-/**
- * Set a nested property in an object
- * Mutates the object itself
- * If the path doesn't exist, it will be created
- * @param {Object} object
- * @param {string | string[]} path
- * @param {*} value
- * @returns {Object}
- */
-
-
-function set(object, path, value) {
-  if (typeof path === 'string') {
-    if (isPath(path)) {
-      return set(object, path.split('.'), value);
-    } else {
-      object[path] = value;
-      return object;
-    }
-  }
-
-  var child = object;
-
-  for (var i = 0; i < path.length - 1; i++) {
-    var key = path[i];
-
-    if (child[key] === undefined) {
-      child[key] = {};
-    }
-
-    child = child[key];
-  }
-
-  if (path.length > 0) {
-    var lastKey = path[path.length - 1];
-    child[lastKey] = value;
-  }
-
-  return object;
-}
-/**
- * Create an object composed of the picked object properties
- * @param {Object} object
- * @param {string[]} properties
- * @param {function} [transform] Optional value to transform a value when picking it
- * @return {Object}
- */
-
-
-function pick(object, properties, transform) {
-  var copy = {};
-
-  for (var i = 0; i < properties.length; i++) {
-    var key = properties[i];
-    var value = get(object, key);
-
-    if (value !== undefined) {
-      set(copy, key, transform ? transform(value, key) : value);
-    }
-  }
-
-  return copy;
-}
-/**
- * Shallow version of pick, creating an object composed of the picked object properties
- * but not for nested properties
- * @param {Object} object
- * @param {string[]} properties
- * @return {Object}
- */
-
-
-function pickShallow(object, properties) {
-  var copy = {};
-
-  for (var i = 0; i < properties.length; i++) {
-    var key = properties[i];
-    var value = object[key];
-
-    if (value !== undefined) {
-      copy[key] = value;
-    }
-  }
-
-  return copy;
-}
-
-function values(object) {
-  return Object.keys(object).map(function (key) {
-    return object[key];
-  });
-} // helper function to test whether a string contains a path like 'user.name'
-
-
-function isPath(str) {
-  return str.indexOf('.') !== -1;
-}
-});
-
-unwrapExports(object);
-var object_1 = object.clone;
-var object_2 = object.mapObject;
-var object_3 = object.extend;
-var object_4 = object.deepExtend;
-var object_5 = object.deepStrictEqual;
-var object_6 = object.deepFlatten;
-var object_7 = object.canDefineProperty;
-var object_8 = object.lazy;
-var object_9 = object.traverse;
-var object_10 = object.isLegacyFactory;
-var object_11 = object.get;
-var object_12 = object.set;
-var object_13 = object.pick;
-var object_14 = object.pickShallow;
-var object_15 = object.values;
-
 var number$1 = createCommonjsModule(function (module, exports) {
 
 Object.defineProperty(exports, "__esModule", {
@@ -85019,8 +84113,6 @@ exports.roundDigits = roundDigits;
 exports.digits = digits;
 exports.nearlyEqual = nearlyEqual;
 exports.tanh = exports.sinh = exports.cosh = exports.atanh = exports.asinh = exports.acosh = exports.DBL_EPSILON = exports.expm1 = exports.cbrt = exports.log1p = exports.log10 = exports.log2 = exports.sign = void 0;
-
-
 
 
 
@@ -85258,27 +84350,7 @@ function format(value, options) {
       return toEngineering(value, precision);
 
     case 'auto':
-      // TODO: clean up some day. Deprecated since: 2018-01-24
-      // @deprecated upper and lower are replaced with upperExp and lowerExp since v4.0.0
-      if (options && options.exponential && (options.exponential.lower !== undefined || options.exponential.upper !== undefined)) {
-        var fixedOptions = (0, object.mapObject)(options, function (x) {
-          return x;
-        });
-        fixedOptions.exponential = undefined;
-
-        if (options.exponential.lower !== undefined) {
-          fixedOptions.lowerExp = Math.round(Math.log(options.exponential.lower) / Math.LN10);
-        }
-
-        if (options.exponential.upper !== undefined) {
-          fixedOptions.upperExp = Math.round(Math.log(options.exponential.upper) / Math.LN10);
-        }
-
-        console.warn('Deprecation warning: Formatting options exponential.lower and exponential.upper ' + '(minimum and maximum value) ' + 'are replaced with exponential.lowerExp and exponential.upperExp ' + '(minimum and maximum exponent) since version 4.0.0. ' + 'Replace ' + JSON.stringify(options) + ' with ' + JSON.stringify(fixedOptions));
-        return toPrecision(value, precision, fixedOptions);
-      } // remove trailing zeros after the decimal point
-
-
+      // remove trailing zeros after the decimal point
       return toPrecision(value, precision, options && options).replace(/((\.\d*?)(0+))($|e)/, function () {
         var digits = arguments[2];
         var e = arguments[4];
@@ -86130,7 +85202,12 @@ function evaluate_numbers_sub(tree, assumptions, max_digits, skip_ordering, eval
         if (denom < 0)
           return ['/', ['*', -numer[1], numer[2]], -denom];
       }
-      // if denonimator is negative, negate whole fraction
+      let reciprocal = 1/denom;
+      if (max_digits === Infinity
+        || mathInstance.round(reciprocal, max_digits) === reciprocal) {
+          return ['*', reciprocal, numer];
+      }
+      // if denominator is negative, negate whole fraction
       if (denom < 0) {
         if (Array.isArray(numer) && numer[0] === '-')
           return ['/', numer[1], -denom];
