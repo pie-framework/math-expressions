@@ -1,8 +1,11 @@
 import astToMathjs from "../lib/converters/ast-to-mathjs";
-import { json } from "mathjs";
+// import * as mathjs from "mathjs";
+import { reviver } from "mathjs";
 import _ from "lodash";
 var converter = new astToMathjs();
-let reviver = json.reviver;
+
+// console.log("json:", json);
+// let reviver = replacer; //json.reviver;
 
 const objectsToTest = [
   {
@@ -12,6 +15,7 @@ const objectsToTest = [
       reviver
     ),
   },
+
   {
     ast: ["+", 1, "x", 3],
     mathjs: JSON.parse(
@@ -792,6 +796,8 @@ const objectsToTest = [
     mathjs: { implemented: false },
   },
 ];
+
+// objectsToTest = [objectsToTest[0]];
 
 for (let objectToTest of objectsToTest) {
   test("parses " + objectToTest.ast + " to " + objectToTest.mathjs, () => {

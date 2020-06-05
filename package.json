@@ -10,6 +10,12 @@
     "email": "kisonecat@gmail.com",
     "url": "http://kisonecat.com/"
   },
+  "contributors": [
+    {
+      "name": "Ed Eustace",
+      "email": "ed.eustace@gmail.com"
+    }
+  ],
   "scripts": {
     "build": "rollup -c",
     "test:watch": "jest --watch",
@@ -26,11 +32,12 @@
   "jsnext:main": "build/math-expressions.js",
   "private": false,
   "dependencies": {
-    "mathjs": "^6.6.4",
+    "mathjs": "^7.0.1",
     "numeric": "^1.2.6",
     "lodash": "^4.17.15"
   },
   "devDependencies": {
+    "@types/mathjs": "^6.0.5",
     "babel-cli": "^6.26.0",
     "babel-loader": "^7.1.5",
     "babel-preset-es2015-node": "^6.1.1",
