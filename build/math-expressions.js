@@ -46307,8 +46307,15 @@ var createQr = /* #__PURE__ */factory(name$207, dependencies$208, function (_ref
          */
 
 
+<<<<<<< HEAD
         for (i = 0; i < rows; i++) {
           s = 0.0; // calculate ith element of [Q * w]
+=======
+const substitute = function( pattern, bindings ) {
+  if (typeof pattern === 'number' || typeof pattern === "boolean") {
+  	return pattern;
+  }
+>>>>>>> 5c403b60d2169d6c676026720ae2e8f002c57653
 
           for (j = k; j < rows; j++) {
             s = addScalar(s, multiplyScalar(Qdata[i][j], w[j]));
@@ -83247,7 +83254,44 @@ function is_complex_ast(tree, assumptions, original_assumptions) {
 	if(operator === '-')
 	    return is_complex_ast(operands[0], assume, original_assumptions);
 
+<<<<<<< HEAD
 	if(operator === '*' || operator === '+') {
+=======
+        if (max_digits === Infinity
+          || math$19.round(quotient, max_digits) === quotient) {
+          return ['/', quotient, denom[2]];
+        }
+      }
+    }
+    else if (typeof denom === 'number') {
+      // check if numer is a multiplication with that begins with
+      // a constant.  If so combine with denominator
+      if (Array.isArray(numer) && numer[0] === '*'
+        && (typeof numer[1] === 'number')) {
+        let quotient = numer[1] / denom;
+        if (max_digits === Infinity
+          || math$19.round(quotient, max_digits) === quotient) {
+          if (quotient === 1)
+            return numer[2];
+          else
+            return ['*', quotient, numer[2]];
+        }
+        // if denom is negative move negative to number
+        if (denom < 0)
+          return ['/', ['*', -numer[1], numer[2]], -denom];
+      }
+      let reciprocal = 1/denom;
+      if (max_digits === Infinity
+        || math$19.round(reciprocal, max_digits) === reciprocal) {
+          return ['*', reciprocal, numer];
+      }
+      // if denominator is negative, negate whole fraction
+      if (denom < 0) {
+        if (Array.isArray(numer) && numer[0] === '-')
+          return ['/', numer[1], -denom];
+        else
+          return ['-', ['/', numer, -denom]];
+>>>>>>> 5c403b60d2169d6c676026720ae2e8f002c57653
 
 	    if(operator==='*') {
 		// one confirmed zero factor makes product zero
